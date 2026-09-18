@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="奏汰と日向が世界の重要ニュースを対話で掘り下げる時事討論アーカイブ" />
+  <title>奏汰と日向のニュース討論</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="トップへ">
+      <span class="brand-mark">K × H</span>
+      <span>
+        <strong>奏汰と日向のニュース討論</strong>
+        <small>WORLD BRIEFING ARCHIVE</small>
+      </span>
+    </a>
+    <nav>
+      <a href="#episodes">Episodes</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">WORLD NEWS × DEEP DIALOGUE</p>
+        <h1>世界のニュースを、<br><em>「なぜ？」</em>から読み解く。</h1>
+        <p class="lead">好奇心旺盛で本質を突く奏汰と、博識で人生二週目のように達観した日向。ふたりが地政学・経済・歴史・技術を横断しながら、ニュースの奥にある構造を話し合います。</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#episodes">討論を読む</a>
+          <span class="count" id="episodeCount"></span>
+        </div>
+      </div>
+      <div class="hero-card" aria-label="登場人物">
+        <div class="speaker kanata">
+          <span class="avatar">奏</span>
+          <div><strong>奏汰</strong><small>素朴な疑問から、本質へ。</small></div>
+        </div>
+        <div class="divider">×</div>
+        <div class="speaker hinata">
+          <span class="avatar">日</span>
+          <div><strong>日向</strong><small>歴史と構造から、未来へ。</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls" id="episodes">
+      <div>
+        <p class="eyebrow">ARCHIVE</p>
+        <h2>これまでの討論</h2>
+      </div>
+      <div class="filters">
+        <input id="search" type="search" placeholder="テーマを検索…" aria-label="討論を検索" />
+        <div id="categoryFilters" class="chips"></div>
+      </div>
+    </section>
+
+    <section id="episodeGrid" class="episode-grid" aria-live="polite"></section>
+
+    <section id="about" class="about">
+      <p class="eyebrow">ABOUT THIS ARCHIVE</p>
+      <h2>「今日の出来事」ではなく、<br>「未来がどちらへ曲がったか」を見る。</h2>
+      <p>各回は、当時のChatGPTとの時事討論を読みやすく再編集したアーカイブです。事実関係や情勢は更新されるため、重要な判断に使う際は最新の一次情報・公的情報をご確認ください。</p>
+    </section>
+  </main>
+
+  <dialog id="episodeDialog">
+    <button class="dialog-close" id="dialogClose" aria-label="閉じる">×</button>
+    <article id="dialogContent"></article>
+  </dialog>
+
+  <footer>
+    <span>奏汰と日向のニュース討論</span>
+    <span>Edited archive · 2026</span>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
