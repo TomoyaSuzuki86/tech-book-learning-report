@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0f2031"/>
+  <circle cx="256" cy="245" r="192" fill="#f7f5ef"/>
+  <circle cx="176" cy="220" r="62" fill="#0f5f9a"/>
+  <circle cx="336" cy="220" r="62" fill="#9a7639"/>
+  <path d="M164 340h184" stroke="#0f2031" stroke-width="34" stroke-linecap="round"/>
+  <text x="256" y="430" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="54" fill="#f7f5ef">K × H</text>
+</svg>
