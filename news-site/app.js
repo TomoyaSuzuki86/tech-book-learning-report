@@ -465,3 +465,52 @@ document.getElementById("backToArchive").addEventListener("click",()=>setHash("#
 document.getElementById("menuButton").addEventListener("click",()=>setHash("#archive"));
 window.addEventListener("hashchange",renderRoute);
 renderFeatured();renderChips();renderCards();renderRoute();
+
+
+// PWA: install prompt and offline support
+const installButton = document.getElementById("installButton");
+let deferredInstallPrompt = null;
+
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(error => {
+      console.warn("Service worker registration failed:", error);
+    });
+  });
+}
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  if (installButton && !isStandalone()) {
+    installButton.hidden = false;
+    installButton.classList.add("ready");
+  }
+});
+
+if (installButton) {
+  installButton.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installButton.classList.remove("ready");
+    installButton.hidden = true;
+  });
+}
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  if (installButton) {
+    installButton.classList.remove("ready");
+    installButton.hidden = true;
+  }
+});
+
+if (isStandalone() && installButton) {
+  installButton.hidden = true;
+}
