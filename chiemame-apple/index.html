@@ -1,220 +1,189 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#f5f5f7" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f0eee8">
   <title>福利厚生・社内制度 | 株式会社知恵豆</title>
-  <meta name="description" content="株式会社知恵豆の福利厚生・社内制度を、成長、つながり、透明性、キャリア、健康、働き方の視点で紹介します。" />
-  <style>
-    :root{
-      --bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--muted:#6e6e73;--line:rgba(0,0,0,.08);
-      --accent:#0a84ff;--accent2:#5e5ce6;--radius:28px;--shadow:0 24px 70px rgba(0,0,0,.08);
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic",sans-serif;-webkit-font-smoothing:antialiased}
-    a{color:inherit;text-decoration:none}
-    img{display:block;width:100%}
-    .nav{position:sticky;top:0;z-index:30;height:52px;display:flex;align-items:center;background:rgba(245,245,247,.78);backdrop-filter:saturate(180%) blur(22px);border-bottom:1px solid rgba(0,0,0,.06)}
-    .nav-inner{width:min(1120px,calc(100% - 34px));margin:auto;display:flex;align-items:center;justify-content:space-between;gap:24px}
-    .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em;font-size:14px}
-    .brand-dot{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff 0 12%,#72d6ff 13%,#0a84ff 45%,#172554 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
-    .navlinks{display:flex;gap:24px;font-size:12px;color:#424245}
-    .hero{min-height:760px;display:grid;place-items:center;overflow:hidden;position:relative;padding:100px 24px 70px}
-    .hero:before{content:"";position:absolute;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,#dff4ff 0,#d9e7ff 25%,#e6ddff 48%,rgba(245,245,247,0) 70%);filter:blur(10px);transform:translate(28%,-4%);opacity:.95}
-    .hero-inner{position:relative;z-index:1;text-align:center;max-width:980px}
-    .eyebrow{font-size:17px;font-weight:650;letter-spacing:.02em;color:#6e6e73;margin-bottom:20px}
-    h1{font-size:clamp(54px,8vw,104px);line-height:.96;letter-spacing:-.055em;margin:0;font-weight:760}
-    .hero p{max-width:760px;margin:34px auto 0;font-size:clamp(20px,2.3vw,28px);line-height:1.45;font-weight:560;letter-spacing:-.02em;color:#3a3a3c}
-    .hero-cta{display:inline-flex;align-items:center;gap:8px;margin-top:34px;color:var(--accent);font-size:17px;font-weight:600}
-    .hero-cta span{font-size:22px;transition:transform .25s}
-    .hero-cta:hover span{transform:translateX(4px)}
-    .section{width:min(1120px,calc(100% - 34px));margin:0 auto;padding:112px 0}
-    .section-head{max-width:820px;margin-bottom:46px}
-    .kicker{font-size:15px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
-    h2{font-size:clamp(40px,5.2vw,70px);line-height:1.02;letter-spacing:-.045em;margin:12px 0 18px}
-    .lead{font-size:clamp(18px,2vw,24px);line-height:1.5;color:var(--muted);margin:0;letter-spacing:-.015em}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:22px}
-    .card{background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.02);min-height:360px;position:relative}
-    .card.pad{padding:38px}
-    .span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-7{grid-column:span 7}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
-    .card h3{font-size:29px;line-height:1.12;letter-spacing:-.03em;margin:10px 0 12px}
-    .card p{font-size:16px;line-height:1.7;color:var(--muted);margin:0}
-    .label{font-size:13px;font-weight:700;color:var(--accent)}
-    .icon{font-size:42px;margin-bottom:18px}
-    .photo{height:100%;min-height:410px;object-fit:cover}
-    .photo-wrap:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.62))}
-    .photo-copy{position:absolute;z-index:2;left:34px;right:34px;bottom:32px;color:#fff}
-    .photo-copy p{color:rgba(255,255,255,.8)}
-    .dark{background:#000;color:#f5f5f7;width:100%;padding:120px 0}
-    .dark .section{padding:0}
-    .dark .kicker{color:#7dd3fc}.dark .lead{color:#a1a1a6}
-    .dark-card{background:linear-gradient(145deg,#121214,#1c1c1e);border:1px solid rgba(255,255,255,.08);box-shadow:none}
-    .dark-card p{color:#a1a1a6}
-    .statement{font-size:clamp(34px,5vw,64px);font-weight:730;letter-spacing:-.045em;line-height:1.08;margin:0}
-    .statement strong{background:linear-gradient(90deg,#7dd3fc,#a78bfa,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .quote{padding:62px;background:linear-gradient(135deg,#e9f5ff,#f4ecff 48%,#fff);border-radius:34px}
-    .quote p{font-size:clamp(29px,4vw,52px);line-height:1.15;letter-spacing:-.04em;font-weight:700;margin:0}
-    .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-    .mini{padding:30px;border-radius:24px;background:#fff}
-    .mini b{display:block;font-size:20px;margin-bottom:8px}.mini span{font-size:14px;line-height:1.55;color:var(--muted)}
-    .pill-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-    .pill{padding:10px 14px;border-radius:999px;background:#eef6ff;color:#005eb8;font-weight:650;font-size:13px}
-    .footer{padding:70px 24px 54px;text-align:center;color:#6e6e73;font-size:12px}
-    .footer-logo{color:#1d1d1f;font-weight:700;font-size:18px;margin-bottom:12px}
-    .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}
-    .reveal.show{opacity:1;transform:none}
-    @media(max-width:820px){
-      .navlinks{display:none}.hero{min-height:650px;padding-top:70px}.section{padding:82px 0}
-      .grid{grid-template-columns:1fr}.span-4,.span-5,.span-6,.span-7,.span-8,.span-12{grid-column:1}
-      .mini-grid{grid-template-columns:1fr}.card{min-height:0}.photo{min-height:360px}.quote{padding:40px 28px}
-    }
-  </style>
+  <meta name="description" content="株式会社知恵豆の福利厚生・社内制度。成長、つながり、経営、キャリア、働き方をひとつの文化として紹介します。">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+  <div class="progress"><i></i></div>
+
   <nav class="nav">
     <div class="nav-inner">
-      <a class="brand" href="#top"><span class="brand-dot"></span> CHIE MAME</a>
+      <a class="brand" href="#top"><span class="brand-mark"></span><span>CHIE MAME</span></a>
       <div class="navlinks">
-        <a href="#growth">人材育成</a><a href="#culture">社内交流</a><a href="#open">OPEN経営</a><a href="#career">キャリア</a><a href="#work">働き方</a>
+        <a href="#growth">成長</a>
+        <a href="#connection">つながり</a>
+        <a href="#open">OPEN経営</a>
+        <a href="#career">キャリア</a>
       </div>
     </div>
   </nav>
 
   <main id="top">
     <section class="hero">
-      <div class="hero-inner reveal">
-        <div class="eyebrow">福利厚生・社内制度</div>
-        <h1>人が育つ。<br>会社が前へ進む。</h1>
-        <p>知恵豆がつくるのは、制度の数ではなく、成長を続けられる環境。学ぶ。挑む。つながる。働く。そのすべてを、ひとつの文化として。</p>
-        <a class="hero-cta" href="#growth">知恵豆の仕組みを見る <span>›</span></a>
+      <div class="hero-orb"></div>
+      <div class="hero-copy">
+        <div class="eyebrow">EMPLOYEE EXPERIENCE / CHIE MAME</div>
+        <h1>
+          <span class="line"><span>育つ余白を、</span></span>
+          <span class="line"><span>つくる。</span></span>
+        </h1>
+        <p class="hero-sub">制度を増やすための制度ではない。学び、挑み、つながり、長く働けること。その一つひとつを、知恵豆という会社の文化にする。</p>
+      </div>
+      <div class="scroll-hint">SCROLL</div>
+    </section>
+
+    <section class="manifesto reveal">
+      <div class="manifesto-inner">
+        <div class="tiny">OUR PHILOSOPHY</div>
+        <p>人が成長する瞬間には、いつも少しの<strong>余白</strong>がある。考える余白。話す余白。失敗する余白。知恵豆は、その余白を会社の仕組みとして<em>設計する。</em></p>
       </div>
     </section>
 
-    <section class="section reveal" id="growth">
-      <div class="section-head">
-        <div class="kicker">Growth</div>
-        <h2>学ぶことを、仕事の外側に置かない。</h2>
-        <p class="lead">社員の成長と幸福を実現し、チャレンジ精神を持つ人が成長し続ける会社へ。若手からマネージャーまで、役割に応じた学びの機会を設計しています。</p>
-      </div>
-      <div class="grid">
-        <article class="card span-7 photo-wrap">
-          <img class="photo" src="https://www.chiemame.com/img/benefits/%E5%88%86%E7%A7%91%E4%BC%9A.png" alt="分科会" />
-          <div class="photo-copy"><div class="label" style="color:#9bd0ff">LEADERSHIP</div><h3>分科会</h3><p>若手がリーダーとなり、IT技術や健康施策など多様なテーマを1年間かけて学びます。</p></div>
-        </article>
-        <article class="card pad span-5"><div class="icon">◐</div><div class="label">MANAGEMENT</div><h3>ジュニアボード</h3><p>選抜メンバーが2年間、経営に関連するテーマへ取り組みます。経営を「知る」だけでなく、「考える」人材へ。</p></article>
-        <article class="card pad span-4"><div class="icon">↗</div><div class="label">MANAGER</div><h3>小虎会</h3><p>経営理論、プレゼン、ディスカッションを通じて、マネージャー層の経営スキルを磨きます。</p></article>
-        <article class="card pad span-4"><div class="icon">◎</div><div class="label">MONTHLY</div><h3>龍仙会</h3><p>部署ごとのトレンドやノウハウを共有し、組織全体の学習速度を高める社内勉強会。</p></article>
-        <article class="card pad span-4"><div class="icon">✦</div><div class="label">EXTERNAL</div><h3>外部講師セミナー</h3><p>英会話、経済情勢、最新ITなど。毎月、仕事の視野を広げるテーマを取り入れています。</p></article>
-        <article class="card pad span-6"><div class="label">ONBOARDING</div><h3>指導補制度</h3><p>先輩社員が1年間、新入社員をサポート。業務だけでなく、会社生活や仕事の悩みまで継続的に支えます。</p></article>
-        <article class="card pad span-6"><div class="label">VENTURE</div><h3>社内ベンチャー</h3><p>社員のビジネスアイデアを具現化し、新規法人設立まで支援。挑戦を「提案」で終わらせません。</p></article>
+    <section class="cinema" id="growth">
+      <div class="cinema-sticky">
+        <div class="cinema-image">
+          <img src="https://www.chiemame.com/img/benefits/%E5%88%86%E7%A7%91%E4%BC%9A.png" alt="知恵豆の分科会">
+        </div>
+        <div class="cinema-shade"></div>
+        <div class="cinema-index">01 / GROWTH</div>
+        <div class="cinema-word serif">学ぶ。</div>
+        <div class="cinema-caption">
+          <b>仕事の中に、学びを置く。</b>
+          <p>若手がリーダーとなる分科会。経営を学ぶジュニアボード。マネージャー層の小虎会。部署の知見を共有する龍仙会。学びを個人任せにしない仕組みがあります。</p>
+        </div>
       </div>
     </section>
 
-    <section class="section reveal" id="culture">
-      <div class="section-head">
-        <div class="kicker">Connection</div>
-        <h2>離れて働くからこそ、つながりを設計する。</h2>
-        <p class="lead">客先常駐が多い働き方だから、偶然の交流には頼らない。社員同士が顔を合わせ、関係を育てる機会を意識的につくっています。</p>
+    <section class="chapter" id="career">
+      <div class="chapter-head reveal">
+        <div class="chapter-no">02 / CAREER</div>
+        <h2>挑戦を、<br>偶然にしない。</h2>
+        <p class="chapter-lead">キャリアは「配属された先」で決まるものではない。資格、目標管理、スキルチェンジ、社内ベンチャー。次へ進みたい人が、実際に動ける仕組みを用意しています。</p>
       </div>
-      <div class="grid">
-        <article class="card span-6 photo-wrap">
-          <img class="photo" src="https://www.chiemame.com/img/benefits/%E3%82%AB%E3%83%95%E3%82%A7%E3%83%86%E3%83%AA%E3%82%A2%E3%83%97%E3%83%A9%E3%83%B3.png" alt="カフェテリアプラン" />
-          <div class="photo-copy"><div class="label" style="color:#9bd0ff">COMMUNITY</div><h3>カフェテリアプラン</h3><p>飲み会、テニスなど、社員交流に使えるチケットを支給します。</p></div>
+
+      <div class="stack">
+        <article class="story wide reveal">
+          <div class="tag">INTERNAL VENTURE</div>
+          <h3>アイデアを、会社にする。</h3>
+          <p>社員のビジネスアイデアを具現化し、新規法人設立まで支援する社内ベンチャー制度。挑戦を、提案書の中だけで終わらせません。</p>
+          <div class="story-art"></div>
         </article>
-        <article class="card span-6 photo-wrap">
-          <img class="photo" src="https://www.chiemame.com/img/benefits/202309_%E5%8F%B0%E6%B9%BE.png" alt="2023年 台湾社員旅行" />
-          <div class="photo-copy"><div class="label" style="color:#ffd59b">TRAVEL</div><h3>社員旅行</h3><p>香港、マレーシア、タイ、台湾など。仕事を離れた時間も、チームの記憶になる。</p></div>
+        <article class="story reveal">
+          <div class="tag">CERTIFICATION</div>
+          <h3>学んだことを、次の仕事へ。</h3>
+          <p>受験費用補助、合格一時金、資格手当。IT資格に限らず、語学や簿記など、業務に活かせる幅広い資格取得を支援します。</p>
+          <div class="story-art"></div>
         </article>
-      </div>
-      <div class="mini-grid" style="margin-top:18px">
-        <div class="mini"><b>10年イベント</b><span>勤続10年を迎えた社員を、特別な食事会や旅行で祝います。</span></div>
-        <div class="mini"><b>MM</b><span>新入社員・指導補・代表が毎月食事をしながら、仕事や会社について話します。</span></div>
-        <div class="mini"><b>3大飲み会 / BBQ</b><span>納涼会、忘年会、決起大会。家族も参加できるBBQも開催。</span></div>
+        <article class="story reveal">
+          <div class="tag">SKILL CHANGE</div>
+          <h3>部署を越える。</h3>
+          <p>新たなキャリア獲得のためのスキルチェンジを支援。他部署への異動を通して、新しい技術領域に挑戦できます。</p>
+          <div class="story-art"></div>
+        </article>
       </div>
     </section>
 
-    <section class="section reveal" id="open">
-      <div class="quote">
-        <div class="kicker">Open Management</div>
-        <p>経営を、<br><strong>社員全員の情報</strong>にする。</p>
+    <section class="gallery" id="connection">
+      <div class="gallery-title reveal">
+        <span>03 / CONNECTION</span>
+        <h2>離れて働くから、<br>会う意味をつくる。</h2>
       </div>
-      <div class="grid" style="margin-top:22px">
-        <article class="card pad span-4"><div class="label">QUARTERLY</div><h3>全体定例会</h3><p>四半期ごとに全社員が集まり、部長によるKPI発表や進捗報告を共有します。</p></article>
-        <article class="card pad span-4"><div class="label">MONTHLY</div><h3>社歴別定例会</h3><p>社歴ごとのグループで経営状況を共有。上長との定期面談も行います。</p></article>
-        <article class="card pad span-4"><div class="label">ACADEMY</div><h3>アカデミー制度</h3><p>同世代コミュニティで目標管理と評価を行い、若手から中堅・ベテランへ展開しています。</p></article>
+
+      <div class="rail">
+        <figure class="frame">
+          <img src="https://www.chiemame.com/img/benefits/202309_%E5%8F%B0%E6%B9%BE.png" alt="2023年 台湾社員旅行">
+          <figcaption>社員旅行 — 記憶を共有する。</figcaption>
+        </figure>
+        <figure class="frame">
+          <img src="https://www.chiemame.com/img/benefits/%E3%82%AB%E3%83%95%E3%82%A7%E3%83%86%E3%83%AA%E3%82%A2%E3%83%97%E3%83%A9%E3%83%B3.png" alt="カフェテリアプラン">
+          <figcaption>カフェテリアプラン — 関係を育てる。</figcaption>
+        </figure>
+        <figure class="frame">
+          <img src="https://www.chiemame.com/img/benefits/%E4%BC%91%E6%9A%87.png" alt="休暇制度">
+          <figcaption>休暇 — 人生の時間を守る。</figcaption>
+        </figure>
+      </div>
+      <div class="gallery-note">10年イベント / MM / 納涼会 / 忘年会 / 決起大会 / BBQ</div>
+    </section>
+
+    <section class="opening" id="open">
+      <div class="opening-inner">
+        <div class="tiny">04 / OPEN MANAGEMENT</div>
+        <h2 class="reveal">経営を、<br>閉じない。</h2>
+        <div class="open-list">
+          <div class="open-row reveal">
+            <b>全体定例会</b>
+            <p>四半期ごとに全社員が集まり、部長によるKPI発表や進捗報告を共有します。</p>
+          </div>
+          <div class="open-row reveal">
+            <b>社歴別定例会</b>
+            <p>社歴ごとのグループで経営状況を共有し、上長との定期面談も行います。</p>
+          </div>
+          <div class="open-row reveal">
+            <b>アカデミー制度</b>
+            <p>同世代コミュニティで目標管理と評価を行い、若手から中堅・ベテランへ展開しています。</p>
+          </div>
+          <div class="open-row reveal">
+            <b>2028 Project</b>
+            <p>若手育成、人事考課、自社パッケージ、技術教育。変革を期限のあるプロジェクトとして進めます。</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="section reveal" id="career">
-      <div class="section-head">
-        <div class="kicker">Career</div>
-        <h2>評価は、未来を決めつけるためではなく、伸ばすために。</h2>
-        <p class="lead">個人目標を経営目標・部門目標とつなぎ、面談と記録を通して成長を支援します。資格取得やスキルチェンジも、会社の仕組みとして後押しします。</p>
+    <section class="chapter">
+      <div class="chapter-head reveal">
+        <div class="chapter-no">05 / WELLBEING</div>
+        <h2>続けられることも、<br>才能の一部。</h2>
+        <p class="chapter-lead">成長だけを求め続けない。健康、休暇、柔軟な働き方、退職金、相談窓口。長く働ける基盤も、会社の責任として整えています。</p>
       </div>
-      <div class="grid">
-        <article class="card pad span-7">
-          <div class="label">CERTIFICATION</div><h3>資格取得を、継続的に支援。</h3>
-          <p>受験費用補助、合格一時金、資格手当を用意。ITだけでなく、語学・簿記など業務に活用できる幅広い資格を対象としています。</p>
-          <div class="pill-row"><span class="pill">TOEIC</span><span class="pill">ITパスポート</span><span class="pill">基本情報技術者</span><span class="pill">ITIL</span><span class="pill">AWS</span><span class="pill">日商簿記</span><span class="pill">PMP</span></div>
+
+      <div class="stack">
+        <article class="story reveal">
+          <div class="tag">HEALTH</div>
+          <h3>健康を、後回しにしない。</h3>
+          <p>健康維持や肥満防止への取り組みに対する奨励金制度を用意しています。</p>
+          <div class="story-art"></div>
         </article>
-        <article class="card pad span-5"><div class="icon">⇄</div><div class="label">SKILL CHANGE</div><h3>部署を越えて、次の技術へ。</h3><p>新たなキャリア獲得のためのスキルチェンジを支援。他部署への異動を通して、新しい技術領域に挑戦できます。</p></article>
-        <article class="card pad span-6"><div class="label">GOAL MANAGEMENT</div><h3>目標管理制度</h3><p>1年間で達成したい目標を設定し、上長との面談を重ねながらキャリアアップを目指します。</p></article>
-        <article class="card pad span-6"><div class="label">ACTIVITY LOG</div><h3>活動記録シート</h3><p>分科会、特命、指導補などの年間活動を記録し、次年度の活動計画へつなげます。</p></article>
+        <article class="story reveal">
+          <div class="tag">LIFE STAGE</div>
+          <h3>生活が変わっても、働ける。</h3>
+          <p>慶弔特別休暇、産休、育児休暇、介護休暇。時短勤務や、案件に応じたテレワークにも対応します。</p>
+          <div class="story-art"></div>
+        </article>
+        <article class="story reveal">
+          <div class="tag">RETIREMENT</div>
+          <h3>その先まで考える。</h3>
+          <p>中小企業退職金共済へ加入。掛金は会社が納付し、退職時には中退共から退職金が直接支払われます。</p>
+          <div class="story-art"></div>
+        </article>
+        <article class="story reveal">
+          <div class="tag">COMPLIANCE</div>
+          <h3>声を上げられる環境。</h3>
+          <p>パワハラ・セクハラ規定を整備し、直接担当者につながる相談窓口を設けています。</p>
+          <div class="story-art"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="ending">
+      <div class="reveal">
+        <p>制度は、飾りではない。<span>人が育つための、余白だ。</span></p>
+        <small>CHIE MAME / EMPLOYEE EXPERIENCE</small>
       </div>
     </section>
   </main>
 
-  <section class="dark reveal">
-    <div class="section">
-      <div class="section-head">
-        <div class="kicker">2028 Project</div>
-        <h2>変革を、期限のある仕事にする。</h2>
-        <p class="lead">「令和の改革」として、2028年までに達成すべき変革を推進。若手育成、人事考課、自社パッケージ、技術教育などを具体的なプロジェクトとして進めています。</p>
-      </div>
-      <div class="grid">
-        <article class="card pad span-6 dark-card"><div class="label">NEXT LEADERS</div><h3>若手育成</h3><p>アカデミー制度を通じて次世代リーダーを育成。分科会座長や育成マネージャーなど、若手にも役割を渡します。</p></article>
-        <article class="card pad span-6 dark-card"><div class="label">EVALUATION</div><h3>人事考課</h3><p>個人目標を経営目標と連動させ、面談を基に昇給・昇格・賞与の基準を定めます。</p></article>
-        <article class="card pad span-6 dark-card"><div class="label">PRODUCT</div><h3>豆助</h3><p>顧客折衝管理を実装したパッケージ「豆助」を開発・販売しています。</p></article>
-        <article class="card pad span-6 dark-card"><div class="label">ENGINEERING</div><h3>寺子屋</h3><p>ABAP技術を学びたい人向けの少人数制勉強会。理解度に合わせて指導します。</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section reveal" id="work">
-    <div class="section-head">
-      <div class="kicker">Wellbeing & Work</div>
-      <h2>長く働けることも、成長の条件。</h2>
-      <p class="lead">健康、休暇、柔軟な働き方、退職金、相談窓口。安心して働き続けるための基盤を、日常の制度として整えています。</p>
-    </div>
-    <div class="grid">
-      <article class="card span-6 photo-wrap">
-        <img class="photo" src="https://www.chiemame.com/img/benefits/%E8%82%A5%E6%BA%80%E9%98%B2%E6%AD%A2%E3%83%BB%E5%81%A5%E5%BA%B7%E7%B6%AD%E6%8C%81%E5%A5%A8%E5%8A%B1%E9%87%91.png" alt="健康促進施策" />
-        <div class="photo-copy"><div class="label" style="color:#99f6e4">HEALTH</div><h3>健康促進施策</h3><p>健康維持や肥満防止への取り組みに対する奨励金制度を設けています。</p></div>
-      </article>
-      <article class="card span-6 photo-wrap">
-        <img class="photo" src="https://www.chiemame.com/img/benefits/%E4%BC%91%E6%9A%87.png" alt="休暇制度" />
-        <div class="photo-copy"><div class="label" style="color:#bfdbfe">LIFE STAGE</div><h3>休暇・働き方</h3><p>慶弔特別休暇、産休、育児休暇、介護休暇。時短勤務や案件に応じたテレワークにも対応します。</p></div>
-      </article>
-      <article class="card pad span-6"><div class="label">RETIREMENT</div><h3>中小企業退職共済</h3><p>国の退職金制度に加入。掛金は会社が納付し、退職時は中退共から退職金が直接支払われます。</p></article>
-      <article class="card pad span-6"><div class="label">COMPLIANCE</div><h3>相談窓口</h3><p>パワハラ・セクハラ規定を整備し、直接担当者につながる相談窓口を設けています。</p></article>
-    </div>
-  </section>
-
-  <section class="section reveal" style="padding-top:40px">
-    <p class="statement">制度は、飾りではない。<br><strong>人と会社を前へ進める、仕組みだ。</strong></p>
-  </section>
-
   <footer class="footer">
-    <div class="footer-logo">CHIE MAME</div>
-    <div>株式会社知恵豆 — 福利厚生・社内制度 コンセプトリデザイン</div>
-    <div style="margin-top:8px">Original information: chiemame.com</div>
+    <span>株式会社知恵豆 — 福利厚生・社内制度 コンセプトリデザイン</span>
+    <span>Original information: chiemame.com</span>
   </footer>
 
-  <script>
-    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')}),{threshold:.12});
-    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-  </script>
+  <script src="./motion.js"></script>
 </body>
 </html>
