@@ -1,46 +1,54 @@
 const express = require("express");
 const path = require("path");
-const { Pool } = require("pg");
+const crypto = require("crypto");
+const { createClient } = require("redis");
 
 const app = express();
 const port = process.env.PORT || 3000;
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
-});
+const redisUrl = process.env.REDIS_URL;
+const LEADERBOARD_KEY = "dot-snake:leaderboard:v1";
+
+if (!redisUrl) {
+  throw new Error("REDIS_URL is required");
+}
+
+const redis = createClient({ url: redisUrl });
+redis.on("error", (err) => console.error("Redis error", err));
 
 app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-async function initDb() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required");
-  }
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS snake_scores (
-      id BIGSERIAL PRIMARY KEY,
-      player_name VARCHAR(16) NOT NULL,
-      score INTEGER NOT NULL CHECK (score >= 5 AND score <= 600),
-      foods INTEGER NOT NULL CHECK (foods >= 0 AND foods <= 595),
-      collisions INTEGER NOT NULL CHECK (collisions >= 0 AND collisions <= 5000),
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_snake_scores_rank
-    ON snake_scores (score DESC, collisions ASC, created_at ASC);
-  `);
+function encodeEntry({ name, score, foods, collisions }) {
+  const safeName = Buffer.from(name, "utf8").toString("base64url");
+  return [
+    Date.now().toString().padStart(13, "0"),
+    crypto.randomBytes(4).toString("hex"),
+    safeName,
+    score,
+    foods,
+    collisions
+  ].join("|");
+}
+
+function decodeEntry(member) {
+  const [timestamp, id, safeName, score, foods, collisions] = member.split("|");
+  return {
+    player_name: Buffer.from(safeName, "base64url").toString("utf8"),
+    score: Number(score),
+    foods: Number(foods),
+    collisions: Number(collisions),
+    created_at: new Date(Number(timestamp)).toISOString()
+  };
+}
+
+function rankScore(score, collisions) {
+  return score * 10001 + (5000 - collisions);
 }
 
 app.get("/api/leaderboard", async (_req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT player_name, score, foods, collisions, created_at
-      FROM snake_scores
-      ORDER BY score DESC, collisions ASC, created_at ASC
-      LIMIT 20
-    `);
-    res.json(rows);
+    const members = await redis.zRange(LEADERBOARD_KEY, 0, 19, { REV: true });
+    res.json(members.map(decodeEntry));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "leaderboard_unavailable" });
@@ -61,38 +69,36 @@ app.post("/api/scores", async (req, res) => {
       return res.status(400).json({ error: "invalid_score" });
     }
 
-    await pool.query(
-      `INSERT INTO snake_scores (player_name, score, foods, collisions) VALUES ($1, $2, $3, $4)`,
-      [name, score, foods, collisions]
-    );
+    const member = encodeEntry({ name, score, foods, collisions });
+    await redis.zAdd(LEADERBOARD_KEY, [{ score: rankScore(score, collisions), value: member }]);
 
-    const { rows } = await pool.query(`
-      SELECT 1 + COUNT(*)::int AS rank
-      FROM snake_scores
-      WHERE score > $1
-         OR (score = $1 AND collisions < $2)
-    `, [score, collisions]);
-
-    res.status(201).json({ ok: true, rank: rows[0].rank });
+    const rankZeroBased = await redis.zRevRank(LEADERBOARD_KEY, member);
+    res.status(201).json({ ok: true, rank: rankZeroBased == null ? null : rankZeroBased + 1 });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "score_save_failed" });
   }
 });
 
-app.get("/health", (_req, res) => res.type("text").send("ok"));
+app.get("/health", async (_req, res) => {
+  try {
+    await redis.ping();
+    res.type("text").send("ok");
+  } catch {
+    res.status(503).type("text").send("redis unavailable");
+  }
+});
 
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-initDb()
-  .then(() => {
-    app.listen(port, "0.0.0.0", () => {
-      console.log(`Dot Snake listening on ${port}`);
-    });
-  })
-  .catch((err) => {
-    console.error("DB init failed", err);
-    process.exit(1);
+(async () => {
+  await redis.connect();
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`Dot Snake listening on ${port}`);
   });
+})().catch((err) => {
+  console.error("Startup failed", err);
+  process.exit(1);
+});
