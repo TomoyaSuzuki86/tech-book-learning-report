@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Dot Snake 60</title>
+<style>
+:root{
+  --bg:#fff;
+  --dot:#e7e6eb;
+  --snake:#a86ff4;
+  --head:#9d63ef;
+  --text:#26232c;
+  --muted:#8f8a97;
+  --panel:rgba(255,255,255,.94);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+body{touch-action:none;overscroll-behavior:none}
+#game{width:100vw;height:100dvh;display:block;background:#fff}
+.hud{position:fixed;z-index:3;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.pill{background:rgba(255,255,255,.86);backdrop-filter:blur(10px);box-shadow:0 8px 30px rgba(50,40,70,.08);border:1px solid rgba(0,0,0,.03);border-radius:999px;padding:9px 13px;font-weight:750;font-size:14px}
+.timer{font-variant-numeric:tabular-nums;min-width:78px;text-align:center}
+.length{min-width:88px;text-align:center}
+.overlay{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(255,255,255,.68);backdrop-filter:blur(7px)}
+.overlay.hidden{display:none}
+.card{width:min(430px,100%);max-height:min(86dvh,760px);overflow:auto;background:var(--panel);border:1px solid rgba(0,0,0,.04);border-radius:28px;padding:24px;box-shadow:0 24px 80px rgba(65,50,90,.14)}
+h1,h2{margin:0 0 8px}
+h1{font-size:30px}
+h2{font-size:24px}
+.sub{margin:0 0 20px;color:var(--muted);line-height:1.55;font-size:14px}
+input{width:100%;height:50px;border:1px solid #e6e3ea;border-radius:16px;padding:0 15px;font:inherit;font-size:16px;outline:none;background:#fff}
+input:focus{border-color:#b58af4;box-shadow:0 0 0 3px rgba(168,111,244,.12)}
+button{width:100%;height:50px;border:0;border-radius:16px;background:var(--snake);color:#fff;font:inherit;font-weight:800;font-size:16px;margin-top:12px}
+button.secondary{background:#f1eef5;color:#514a59}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.stat{border-radius:18px;background:#f7f5f9;padding:14px;text-align:center}
+.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:var(--muted)}
+.rank-wrap{margin-top:18px}
+.rank-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.rank-title b{font-size:15px}.rank-title span{font-size:12px;color:var(--muted)}
+.rank-list{display:flex;flex-direction:column;gap:7px}
+.rank-row{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:10px 11px;background:#f8f7fa;border-radius:14px;font-size:14px}
+.rank-no{font-weight:900;color:#8c62c8}
+.rank-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-score{font-weight:850}
+.note{margin-top:14px;font-size:12px;color:var(--muted);line-height:1.5}
+.error{color:#b34343;font-size:13px;min-height:20px;margin-top:7px}
+@media(max-width:420px){.card{padding:20px;border-radius:24px}h1{font-size:27px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div class="hud">
+  <div class="pill length">長さ <span id="lengthHud">5</span></div>
+  <div class="pill timer"><span id="timerHud">60.0</span> 秒</div>
+</div>
+
+<div class="overlay" id="startOverlay">
+  <div class="card">
+    <h1>Dot Snake 60</h1>
+    <p class="sub">制限時間は60秒。紫のドットを食べて、どこまで長くできるか競います。壁は反対側へ抜け、自分にぶつかっても5000回までは続行できます。</p>
+    <input id="nameInput" maxlength="16" autocomplete="nickname" placeholder="名前を入力">
+    <div class="error" id="startError"></div>
+    <button id="startBtn">60秒チャレンジ開始</button>
+    <div class="rank-wrap">
+      <div class="rank-title"><b>ランキング TOP 20</b><span>長さ順</span></div>
+      <div class="rank-list" id="startRanks"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="resultOverlay">
+  <div class="card">
+    <h2>TIME UP</h2>
+    <p class="sub" id="resultMessage">結果を集計しています。</p>
+    <div class="stats">
+      <div class="stat"><b id="resultLength">5</b><span>最終の長さ</span></div>
+      <div class="stat"><b id="resultRank">--</b><span>順位</span></div>
+    </div>
+    <button id="retryBtn">もう一度</button>
+    <button class="secondary" id="changeNameBtn">名前を変える</button>
+    <div class="rank-wrap">
+      <div class="rank-title"><b>ランキング TOP 20</b><span>長さ順</span></div>
+      <div class="rank-list" id="resultRanks"></div>
+    </div>
+    <p class="note">同じ長さの場合は、自分への衝突回数が少ない記録を上位にします。</p>
+  </div>
+</div>
+
+<script>
+(()=>{
+const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+const startOverlay=document.getElementById("startOverlay");
+const resultOverlay=document.getElementById("resultOverlay");
+const startBtn=document.getElementById("startBtn");
+const retryBtn=document.getElementById("retryBtn");
+const changeNameBtn=document.getElementById("changeNameBtn");
+const nameInput=document.getElementById("nameInput");
+const startError=document.getElementById("startError");
+const lengthHud=document.getElementById("lengthHud");
+const timerHud=document.getElementById("timerHud");
+const resultLength=document.getElementById("resultLength");
+const resultRank=document.getElementById("resultRank");
+const resultMessage=document.getElementById("resultMessage");
+const startRanks=document.getElementById("startRanks");
+const resultRanks=document.getElementById("resultRanks");
+
+const START_LENGTH=5, MAX_COLLISIONS=5000, ROUND_MS=60000, STEP_MS=128;
+let dpr=1,cols=0,rows=0,gap=0,ox=0,oy=0;
+let snake=[],dir={x:1,y:0},queuedDir={x:1,y:0},food={x:0,y:0};
+let touchStart=null,lastFrame=0,moveAcc=0,roundStart=0,playing=false;
+let foods=0,collisions=0,playerName="",submitPending=false;
+
+nameInput.value=localStorage.getItem("dotSnakeName")||"";
+
+function resize(){
+  const w=innerWidth,h=innerHeight;
+  dpr=Math.max(1,Math.min(2,devicePixelRatio||1));
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  canvas.style.width=w+"px";canvas.style.height=h+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  gap=Math.max(27,Math.min(36,Math.min(w/12.5,h/18)));
+  cols=Math.max(10,Math.floor((w-gap*1.4)/gap)+1);
+  rows=Math.max(14,Math.floor((h-gap*1.8)/gap)+1);
+  ox=(w-gap*(cols-1))/2;oy=(h-gap*(rows-1))/2;
+}
+function resetBoard(){
+  resize();
+  const cx=Math.floor(cols*.58),cy=Math.floor(rows*.46);
+  snake=[];
+  for(let i=0;i<START_LENGTH;i++)snake.push({x:cx-i,y:cy});
+  dir={x:1,y:0};queuedDir={x:1,y:0};
+  foods=0;collisions=0;moveAcc=0;
+  lengthHud.textContent=START_LENGTH;
+  spawnFood();
+}
+function spawnFood(){
+  const free=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    if(!snake.some(s=>s.x===x&&s.y===y))free.push({x,y});
+  }
+  food=free[Math.floor(Math.random()*free.length)]||{x:0,y:0};
+}
+function opposite(a,b){return a.x===-b.x&&a.y===-b.y}
+function setDir(x,y){
+  if(!playing)return;
+  const n={x,y};if(!opposite(n,dir))queuedDir=n;
+}
+function move(){
+  dir=queuedDir;
+  let nx=(snake[0].x+dir.x+cols)%cols;
+  let ny=(snake[0].y+dir.y+rows)%rows;
+  const head={x:nx,y:ny};
+
+  if(snake.some(s=>s.x===head.x&&s.y===head.y)){
+    collisions++;
+    if(collisions>MAX_COLLISIONS){finishRound();return}
+    if(navigator.vibrate)navigator.vibrate(7);
+  }
+
+  snake.unshift(head);
+  if(head.x===food.x&&head.y===food.y){
+    foods++;
+    lengthHud.textContent=START_LENGTH+foods;
+    spawnFood();
+    if(navigator.vibrate)navigator.vibrate(14);
+  }else{
+    snake.pop();
+  }
+}
+function dot(x,y,r,fill){
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();
+}
+function draw(){
+  const w=innerWidth,h=innerHeight;
+  ctx.clearRect(0,0,w,h);ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)dot(ox+x*gap,oy+y*gap,Math.max(1.7,gap*.065),"#e7e6eb");
+  dot(ox+food.x*gap,oy+food.y*gap,gap*.24,"#a86ff4");
+  snake.forEach((s,i)=>{
+    const x=ox+s.x*gap,y=oy+s.y*gap;
+    dot(x,y,i===0?gap*.29:gap*.235,i===0?"#9d63ef":"#a86ff4");
+    if(i===0){
+      const f=gap*.055,side=gap*.085,px=-dir.y,py=dir.x,er=Math.max(1.6,gap*.038);
+      dot(x+dir.x*f+px*side,y+dir.y*f+py*side,er,"#fff");
+      dot(x+dir.x*f-px*side,y+dir.y*f-py*side,er,"#fff");
+    }
+  });
+}
+function frame(t){
+  const dt=Math.min(70,t-lastFrame);lastFrame=t;
+  if(playing){
+    const remain=Math.max(0,ROUND_MS-(performance.now()-roundStart));
+    timerHud.textContent=(remain/1000).toFixed(1);
+    moveAcc+=dt;
+    while(moveAcc>=STEP_MS&&playing){move();moveAcc-=STEP_MS}
+    if(remain<=0&&playing)finishRound();
+  }
+  draw();requestAnimationFrame(frame);
+}
+async function fetchRanks(target){
+  target.innerHTML='<div class="rank-row"><div class="rank-no">…</div><div class="rank-name">読み込み中</div><div class="rank-score"></div></div>';
+  try{
+    const r=await fetch("/api/leaderboard",{cache:"no-store"});
+    if(!r.ok)throw new Error();
+    const rows=await r.json();
+    target.innerHTML="";
+    if(!rows.length){
+      target.innerHTML='<div class="rank-row"><div class="rank-no">-</div><div class="rank-name">まだ記録がありません</div><div class="rank-score"></div></div>';
+      return;
+    }
+    rows.forEach((row,i)=>{
+      const el=document.createElement("div");el.className="rank-row";
+      const no=document.createElement("div");no.className="rank-no";no.textContent=i+1;
+      const name=document.createElement("div");name.className="rank-name";name.textContent=row.player_name;
+      const score=document.createElement("div");score.className="rank-score";score.textContent=row.score;
+      el.append(no,name,score);target.appendChild(el);
+    });
+  }catch{
+    target.innerHTML='<div class="rank-row"><div class="rank-no">!</div><div class="rank-name">ランキングを取得できませんでした</div><div class="rank-score"></div></div>';
+  }
+}
+function beginRound(){
+  const name=nameInput.value.trim().slice(0,16);
+  if(!name){startError.textContent="名前を入力してください";return}
+  playerName=name;localStorage.setItem("dotSnakeName",name);
+  startError.textContent="";
+  resetBoard();
+  startOverlay.classList.add("hidden");resultOverlay.classList.add("hidden");
+  timerHud.textContent="60.0";
+  playing=true;submitPending=false;roundStart=performance.now();lastFrame=performance.now();
+}
+async function finishRound(){
+  if(!playing||submitPending)return;
+  playing=false;submitPending=true;
+  timerHud.textContent="0.0";
+  const score=START_LENGTH+foods;
+  resultLength.textContent=score;
+  resultRank.textContent="…";
+  resultMessage.textContent="ランキングへ記録しています。";
+  resultOverlay.classList.remove("hidden");
+
+  try{
+    const r=await fetch("/api/scores",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:playerName,score,foods,collisions})
+    });
+    if(!r.ok)throw new Error();
+    const data=await r.json();
+    resultRank.textContent=data.rank+"位";
+    resultMessage.textContent=playerName+" の記録：長さ "+score;
+  }catch{
+    resultRank.textContent="--";
+    resultMessage.textContent="記録の保存に失敗しました。";
+  }
+  await fetchRanks(resultRanks);
+  submitPending=false;
+}
+startBtn.addEventListener("click",beginRound);
+retryBtn.addEventListener("click",beginRound);
+changeNameBtn.addEventListener("click",()=>{
+  resultOverlay.classList.add("hidden");
+  startOverlay.classList.remove("hidden");
+  fetchRanks(startRanks);
+  setTimeout(()=>nameInput.focus(),50);
+});
+nameInput.addEventListener("keydown",e=>{if(e.key==="Enter")beginRound()});
+
+addEventListener("keydown",e=>{
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key))e.preventDefault();
+  if(e.key==="ArrowUp")setDir(0,-1);
+  if(e.key==="ArrowDown")setDir(0,1);
+  if(e.key==="ArrowLeft")setDir(-1,0);
+  if(e.key==="ArrowRight")setDir(1,0);
+},{passive:false});
+
+canvas.addEventListener("touchstart",e=>{
+  const t=e.changedTouches[0];touchStart={x:t.clientX,y:t.clientY};
+},{passive:true});
+canvas.addEventListener("touchend",e=>{
+  if(!touchStart)return;
+  const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;touchStart=null;
+  if(Math.hypot(dx,dy)<14)return;
+  if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0);else setDir(0,dy>0?1:-1);
+},{passive:true});
+
+addEventListener("resize",()=>{resize();draw()});
+resetBoard();fetchRanks(startRanks);requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
