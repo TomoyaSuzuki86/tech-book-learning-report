@@ -17,6 +17,49 @@ type Voice = {
 
 type Mode = "tts" | "changer";
 
+type VoiceSettings = {
+  stability: number;
+  similarityBoost: number;
+  style: number;
+  speed: number;
+  useSpeakerBoost: boolean;
+};
+
+const PRESETS = [
+  {
+    id: "natural",
+    label: "ナチュラル",
+    description: "自然なバランス",
+    settings: { stability: 0.5, similarityBoost: 0.75, style: 0, speed: 1, useSpeakerBoost: true },
+  },
+  {
+    id: "expressive",
+    label: "感情豊か",
+    description: "抑揚を強める",
+    settings: { stability: 0.3, similarityBoost: 0.75, style: 0.6, speed: 0.98, useSpeakerBoost: true },
+  },
+  {
+    id: "calm",
+    label: "落ち着き",
+    description: "安定してゆっくり",
+    settings: { stability: 0.8, similarityBoost: 0.75, style: 0.12, speed: 0.9, useSpeakerBoost: true },
+  },
+  {
+    id: "faithful",
+    label: "声に忠実",
+    description: "元の声へ寄せる",
+    settings: { stability: 0.65, similarityBoost: 0.9, style: 0.05, speed: 1, useSpeakerBoost: true },
+  },
+  {
+    id: "quick",
+    label: "テンポ良く",
+    description: "少し速め",
+    settings: { stability: 0.55, similarityBoost: 0.75, style: 0.1, speed: 1.15, useSpeakerBoost: true },
+  },
+] as const;
+
+const DEFAULT_SETTINGS: VoiceSettings = { ...PRESETS[0].settings };
+
 function errorMessage(status: number, data: unknown) {
   if (
     typeof data === "object" &&
@@ -45,6 +88,15 @@ export default function Home() {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [presetId, setPresetId] = useState("natural");
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(DEFAULT_SETTINGS);
+  const [cloneOpen, setCloneOpen] = useState(false);
+  const [cloneName, setCloneName] = useState("");
+  const [cloneFiles, setCloneFiles] = useState<File[]>([]);
+  const [removeCloneNoise, setRemoveCloneNoise] = useState(false);
+  const [cloneConsent, setCloneConsent] = useState(false);
+  const [cloning, setCloning] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -92,6 +144,7 @@ export default function Home() {
   async function connect() {
     setLoadingVoices(true);
     setError("");
+    setNotice("");
     clearResult();
 
     try {
@@ -127,6 +180,72 @@ export default function Home() {
     }
   }
 
+  function applyPreset(preset: (typeof PRESETS)[number]) {
+    setPresetId(preset.id);
+    setVoiceSettings({ ...preset.settings });
+    clearResult();
+  }
+
+  function updateVoiceSetting<K extends keyof VoiceSettings>(
+    key: K,
+    value: VoiceSettings[K],
+  ) {
+    setPresetId("custom");
+    setVoiceSettings((current) => ({ ...current, [key]: value }));
+    clearResult();
+  }
+
+  async function cloneVoice() {
+    if (!cloneName.trim() || cloneFiles.length === 0 || !cloneConsent) return;
+
+    setCloning(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const form = new FormData();
+      form.append("name", cloneName.trim());
+      form.append("removeBackgroundNoise", String(removeCloneNoise));
+      cloneFiles.forEach((file) => form.append("files", file));
+
+      const response = await fetch("/api/voice-clone", {
+        method: "POST",
+        headers: keyHeaders(),
+        body: form,
+      });
+      const data = (await response.json().catch(() => ({}))) as {
+        voiceId?: string;
+        requiresVerification?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok || !data.voiceId) {
+        throw new Error(data.error || "ボイスクローンを作成できませんでした。");
+      }
+
+      await connect();
+      setVoiceId(data.voiceId);
+      setCloneName("");
+      setCloneFiles([]);
+      setCloneConsent(false);
+      setRemoveCloneNoise(false);
+      setCloneOpen(false);
+      setNotice(
+        data.requiresVerification
+          ? "クローンを作成しました。ElevenLabs側で追加の本人確認が必要です。"
+          : "ボイスクローンを作成し、選択しました。",
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "ボイスクローンの作成に失敗しました。",
+      );
+    } finally {
+      setCloning(false);
+    }
+  }
+
   async function generateTts() {
     if (!connected || !voiceId || !text.trim()) return;
 
@@ -141,7 +260,7 @@ export default function Home() {
           "Content-Type": "application/json",
           ...keyHeaders(),
         },
-        body: JSON.stringify({ text, voiceId }),
+        body: JSON.stringify({ text, voiceId, voiceSettings }),
       });
 
       if (!response.ok) {
@@ -240,6 +359,7 @@ export default function Home() {
       const form = new FormData();
       form.append("audio", sourceFile);
       form.append("voiceId", voiceId);
+      form.append("voiceSettings", JSON.stringify(voiceSettings));
 
       const response = await fetch("/api/voice-changer", {
         method: "POST",
@@ -295,6 +415,12 @@ export default function Home() {
         <div className="globalAlert" role="alert">
           <strong>処理できませんでした</strong>
           <span>{error}</span>
+        </div>
+      )}
+
+      {notice && (
+        <div className="globalNotice" role="status" aria-live="polite">
+          {notice}
         </div>
       )}
 
@@ -364,9 +490,20 @@ export default function Home() {
               </div>
             </div>
 
-            <label className="fieldLabel" htmlFor="voice">
-              変換先の声
-            </label>
+            <div className="voiceFieldHeader">
+              <label className="fieldLabel" htmlFor="voice">
+                変換先の声
+              </label>
+              <button
+                className="compactButton"
+                type="button"
+                aria-expanded={cloneOpen}
+                aria-controls="voiceClonePanel"
+                onClick={() => setCloneOpen((current) => !current)}
+              >
+                ＋ 声を作る
+              </button>
+            </div>
             <select
               className="selectInput"
               id="voice"
@@ -388,6 +525,88 @@ export default function Home() {
               ))}
             </select>
 
+            {cloneOpen && (
+              <div className="clonePanel" id="voiceClonePanel">
+                <div className="clonePanelHeading">
+                  <strong>ボイスクローン</strong>
+                  <span>許可を得た声だけを使用してください。</span>
+                </div>
+
+                <label className="fieldLabel" htmlFor="cloneName">
+                  声の名前
+                </label>
+                <input
+                  className="textInput"
+                  id="cloneName"
+                  value={cloneName}
+                  onChange={(event) => setCloneName(event.target.value)}
+                  placeholder="例：自分の声"
+                  maxLength={100}
+                />
+
+                <label className="cloneUpload">
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    multiple
+                    onChange={(event) =>
+                      setCloneFiles(Array.from(event.target.files ?? []))
+                    }
+                  />
+                  <span className="cloneUploadTitle">音声サンプルを選択</span>
+                  <span className="cloneUploadDescription">
+                    複数ファイルをまとめて選択できます。
+                  </span>
+                </label>
+
+                {cloneFiles.length > 0 && (
+                  <p className="fileSummary">
+                    {cloneFiles.length}件選択 ·{" "}
+                    {cloneFiles
+                      .reduce((sum, file) => sum + file.size, 0)
+                      .toLocaleString()} bytes
+                  </p>
+                )}
+
+                <label className="checkboxRow">
+                  <input
+                    type="checkbox"
+                    checked={removeCloneNoise}
+                    onChange={(event) => setRemoveCloneNoise(event.target.checked)}
+                  />
+                  <span>
+                    背景ノイズを除去する
+                    <small>ノイズがない音声では品質が落ちる場合があります。</small>
+                  </span>
+                </label>
+
+                <label className="checkboxRow consentRow">
+                  <input
+                    type="checkbox"
+                    checked={cloneConsent}
+                    onChange={(event) => setCloneConsent(event.target.checked)}
+                  />
+                  <span>
+                    この声をクローンする権利・本人の許可があります
+                  </span>
+                </label>
+
+                <button
+                  className="primaryButton fullWidthButton"
+                  type="button"
+                  disabled={
+                    cloning ||
+                    !cloneName.trim() ||
+                    cloneFiles.length === 0 ||
+                    !cloneConsent
+                  }
+                  onClick={cloneVoice}
+                >
+                  {cloning ? "クローン作成中…" : "この声を作成"}
+                </button>
+              </div>
+            )}
+
             {selectedVoice?.previewUrl ? (
               <div className="voicePreview">
                 <div className="previewHeading">
@@ -401,6 +620,118 @@ export default function Home() {
                 接続すると、利用できる声をここから選べます。
               </p>
             )}
+            <div className="presetSection">
+              <div className="presetHeading">
+                <div>
+                  <p className="stepLabel">声の雰囲気</p>
+                  <h3>プリセット</h3>
+                </div>
+                {presetId === "custom" && (
+                  <span className="customBadge">カスタム</span>
+                )}
+              </div>
+
+              <div className="presetChips" aria-label="声のプリセット">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    className={`presetChip ${presetId === preset.id ? "active" : ""}`}
+                    type="button"
+                    aria-pressed={presetId === preset.id}
+                    onClick={() => applyPreset(preset)}
+                  >
+                    <strong>{preset.label}</strong>
+                    <span>{preset.description}</span>
+                  </button>
+                ))}
+              </div>
+
+              <details className="advancedSettings">
+                <summary>詳細設定</summary>
+                <div className="settingsGrid">
+                  <label className="rangeRow">
+                    <span>
+                      安定性
+                      <output>{voiceSettings.stability.toFixed(2)}</output>
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={voiceSettings.stability}
+                      onChange={(event) =>
+                        updateVoiceSetting("stability", Number(event.target.value))
+                      }
+                    />
+                  </label>
+                  <label className="rangeRow">
+                    <span>
+                      声の類似度
+                      <output>{voiceSettings.similarityBoost.toFixed(2)}</output>
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={voiceSettings.similarityBoost}
+                      onChange={(event) =>
+                        updateVoiceSetting(
+                          "similarityBoost",
+                          Number(event.target.value),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="rangeRow">
+                    <span>
+                      表現の強さ
+                      <output>{voiceSettings.style.toFixed(2)}</output>
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={voiceSettings.style}
+                      onChange={(event) =>
+                        updateVoiceSetting("style", Number(event.target.value))
+                      }
+                    />
+                  </label>
+                  <label className="rangeRow">
+                    <span>
+                      速度
+                      <output>{voiceSettings.speed.toFixed(2)}×</output>
+                    </span>
+                    <input
+                      type="range"
+                      min="0.7"
+                      max="1.2"
+                      step="0.05"
+                      value={voiceSettings.speed}
+                      onChange={(event) =>
+                        updateVoiceSetting("speed", Number(event.target.value))
+                      }
+                    />
+                  </label>
+                  <label className="checkboxRow speakerBoostRow">
+                    <input
+                      type="checkbox"
+                      checked={voiceSettings.useSpeakerBoost}
+                      onChange={(event) =>
+                        updateVoiceSetting("useSpeakerBoost", event.target.checked)
+                      }
+                    />
+                    <span>
+                      Speaker Boost
+                      <small>元の声への近さを強めます。</small>
+                    </span>
+                  </label>
+                </div>
+              </details>
+            </div>
           </section>
         </aside>
 
