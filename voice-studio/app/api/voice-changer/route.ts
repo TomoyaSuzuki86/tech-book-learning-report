@@ -1,34 +1,22 @@
 import {
-  createClient,
   DEFAULT_STS_MODEL,
   DEFAULT_VOICE_ID,
-  elevenLabsError,
+  elevenLabsFetchError,
+  getApiKey,
+  normalizeVoiceSettings,
+  toApiVoiceSettings,
 } from "../../../lib/elevenlabs";
 
 const MAX_BYTES = 50 * 1024 * 1024;
 
-async function streamToBuffer(
-  stream: ReadableStream<Uint8Array>,
-): Promise<Buffer> {
-  const reader = stream.getReader();
-  const chunks: Buffer[] = [];
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value?.length) chunks.push(Buffer.from(value));
-    }
-  } finally {
-    reader.releaseLock();
-  }
-
-  return Buffer.concat(chunks);
-}
-
 export async function POST(request: Request) {
-  const { client, response } = createClient(request);
-  if (!client) return response;
+  const apiKey = getApiKey(request);
+  if (!apiKey) {
+    return Response.json(
+      { error: "ElevenLabs APIキーを入力してください。" },
+      { status: 401 },
+    );
+  }
 
   let formData: FormData;
   try {
@@ -42,6 +30,7 @@ export async function POST(request: Request) {
 
   const audio = formData.get("audio");
   const voiceIdRaw = formData.get("voiceId");
+  const voiceSettingsRaw = formData.get("voiceSettings");
 
   if (!(audio instanceof File) || audio.size === 0) {
     return Response.json(
@@ -62,21 +51,59 @@ export async function POST(request: Request) {
       ? voiceIdRaw.trim()
       : DEFAULT_VOICE_ID;
 
-  try {
-    const stream = await client.speechToSpeech.convert(voiceId, {
-      audio,
-      modelId: DEFAULT_STS_MODEL,
-      outputFormat: "mp3_44100_128",
-    });
-    const buffer = await streamToBuffer(stream);
+  let parsedSettings: unknown = null;
+  if (typeof voiceSettingsRaw === "string" && voiceSettingsRaw.trim()) {
+    try {
+      parsedSettings = JSON.parse(voiceSettingsRaw);
+    } catch {
+      return Response.json(
+        { error: "音声設定の形式が不正です。" },
+        { status: 400 },
+      );
+    }
+  }
 
-    return new Response(new Uint8Array(buffer), {
+  const upstreamForm = new FormData();
+  upstreamForm.append("audio", audio, audio.name);
+  upstreamForm.append("model_id", DEFAULT_STS_MODEL);
+  upstreamForm.append(
+    "voice_settings",
+    JSON.stringify(
+      toApiVoiceSettings(normalizeVoiceSettings(parsedSettings)),
+    ),
+  );
+
+  try {
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/speech-to-speech/${encodeURIComponent(
+        voiceId,
+      )}?output_format=mp3_44100_128`,
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": apiKey,
+        },
+        body: upstreamForm,
+      },
+    );
+
+    if (!response.ok) {
+      return elevenLabsFetchError(response, "ボイス変換に失敗しました。");
+    }
+
+    return new Response(response.body, {
       headers: {
         "Content-Type": "audio/mpeg",
         "Cache-Control": "no-store",
       },
     });
   } catch (error) {
-    return elevenLabsError(error, "ボイス変換に失敗しました。");
+    return Response.json(
+      {
+        error:
+          error instanceof Error ? error.message : "ボイス変換に失敗しました。",
+      },
+      { status: 502 },
+    );
   }
 }
