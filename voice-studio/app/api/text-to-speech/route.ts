@@ -1,18 +1,26 @@
 import {
-  createClient,
   DEFAULT_TTS_MODEL,
   DEFAULT_VOICE_ID,
-  elevenLabsError,
+  elevenLabsFetchError,
+  getApiKey,
+  normalizeVoiceSettings,
+  toApiVoiceSettings,
 } from "../../../lib/elevenlabs";
 
 type Body = {
   text?: unknown;
   voiceId?: unknown;
+  voiceSettings?: unknown;
 };
 
 export async function POST(request: Request) {
-  const { client, response } = createClient(request);
-  if (!client) return response;
+  const apiKey = getApiKey(request);
+  if (!apiKey) {
+    return Response.json(
+      { error: "ElevenLabs APIキーを入力してください。" },
+      { status: 401 },
+    );
+  }
 
   let body: Body;
   try {
@@ -34,20 +42,51 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    const stream = await client.textToSpeech.convert(voiceId, {
-      text,
-      modelId: DEFAULT_TTS_MODEL,
-      outputFormat: "mp3_44100_128",
-    });
+  const voiceSettings = toApiVoiceSettings(
+    normalizeVoiceSettings(body.voiceSettings),
+  );
 
-    return new Response(stream, {
+  try {
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(
+        voiceId,
+      )}?output_format=mp3_44100_128`,
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          model_id: DEFAULT_TTS_MODEL,
+          voice_settings: voiceSettings,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      return elevenLabsFetchError(
+        response,
+        "読み上げ音声の生成に失敗しました。",
+      );
+    }
+
+    return new Response(response.body, {
       headers: {
         "Content-Type": "audio/mpeg",
         "Cache-Control": "no-store",
       },
     });
   } catch (error) {
-    return elevenLabsError(error, "読み上げ音声の生成に失敗しました。");
+    return Response.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "読み上げ音声の生成に失敗しました。",
+      },
+      { status: 502 },
+    );
   }
 }
