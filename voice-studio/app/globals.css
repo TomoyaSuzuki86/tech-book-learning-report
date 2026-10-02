@@ -189,6 +189,17 @@ audio {
   font-size: 14px;
 }
 
+.globalNotice {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid #bde8d2;
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .workspaceGrid {
   display: grid;
   grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
@@ -321,7 +332,9 @@ audio {
 .actionHint,
 .appFooter,
 .charCount,
-.uploadDescription {
+.uploadDescription,
+.cloneUploadDescription,
+.fileSummary {
   margin: 0;
   color: var(--color-muted);
   font-size: 13px;
@@ -365,6 +378,235 @@ audio {
 
 .connectButton {
   min-width: 82px;
+}
+
+.voiceFieldHeader,
+.presetHeading,
+.clonePanelHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.compactButton {
+  min-height: 40px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.compactButton:hover {
+  background: var(--color-surface-soft);
+}
+
+.clonePanel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.clonePanelHeading {
+  align-items: flex-start;
+}
+
+.clonePanelHeading strong {
+  font-size: 15px;
+}
+
+.clonePanelHeading span {
+  max-width: 170px;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.cloneUpload {
+  display: grid;
+  place-items: center;
+  min-height: 104px;
+  padding: 16px;
+  border: 1.5px dashed #bcc2cb;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  text-align: center;
+  cursor: pointer;
+}
+
+.cloneUpload:hover {
+  border-color: #858d99;
+}
+
+.cloneUpload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cloneUploadTitle {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.checkboxRow input {
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: var(--color-primary);
+}
+
+.checkboxRow > span {
+  display: grid;
+  gap: 2px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.checkboxRow small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.consentRow {
+  padding-top: 2px;
+  border-top: 1px solid var(--color-border);
+}
+
+.presetSection {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.presetHeading h3 {
+  margin: 2px 0 0;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.customBadge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: #9d2e2e;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.presetChips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.presetChip {
+  min-height: 64px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 10px 11px;
+  text-align: left;
+}
+
+.presetChip strong,
+.presetChip span {
+  display: block;
+}
+
+.presetChip strong {
+  font-size: 13px;
+}
+
+.presetChip span {
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.presetChip:hover {
+  border-color: #aeb5bf;
+  background: var(--color-surface-soft);
+}
+
+.presetChip.active {
+  border-color: #939aa5;
+  box-shadow: inset 0 0 0 1px #939aa5;
+}
+
+.advancedSettings {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.advancedSettings summary {
+  min-height: 44px;
+  padding: 11px 13px;
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.settingsGrid {
+  display: grid;
+  gap: 16px;
+  padding: 4px 13px 14px;
+}
+
+.rangeRow {
+  display: grid;
+  gap: 6px;
+}
+
+.rangeRow > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rangeRow output {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rangeRow input[type="range"] {
+  width: 100%;
+  min-height: 30px;
+  accent-color: var(--color-primary);
+}
+
+.speakerBoostRow {
+  margin-top: -2px;
 }
 
 .secondaryButton,
@@ -725,6 +967,27 @@ audio {
   .recordingButton,
   .textButton {
     width: 100%;
+  }
+
+  .voiceFieldHeader {
+    align-items: flex-end;
+  }
+
+  .compactButton {
+    min-height: 44px;
+  }
+
+  .presetChips {
+    grid-template-columns: 1fr;
+  }
+
+  .clonePanelHeading {
+    display: grid;
+  }
+
+  .clonePanelHeading span {
+    max-width: none;
+    text-align: left;
   }
 
   .modeTabs {
