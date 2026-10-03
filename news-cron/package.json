@@ -1,8 +1,0 @@
-{
-  "name": "kanata-hinata-news-cron",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "generate": "node generate-news.mjs"
-  }
-}
