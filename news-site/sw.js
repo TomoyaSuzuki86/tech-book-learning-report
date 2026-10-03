@@ -1,5 +1,5 @@
-const CORE_CACHE = "kh-news-core-v1";
-const RUNTIME_CACHE = "kh-news-runtime-v1";
+const CORE_CACHE = "kh-news-core-v2";
+const RUNTIME_CACHE = "kh-news-runtime-v2";
 const CORE = [
   "./",
   "./index.html",
@@ -53,6 +53,23 @@ self.addEventListener("fetch", event => {
         return fresh;
       } catch {
         return (await cache.match(request)) || (await caches.match(request)) || new Response("", {status: 504});
+      }
+    })());
+    return;
+  }
+
+  if (url.hostname === "aaygbxirwyqyubqdejym.supabase.co" && url.pathname.startsWith("/rest/v1/kanata_hinata_articles")) {
+    event.respondWith((async () => {
+      const cache = await caches.open(RUNTIME_CACHE);
+      try {
+        const fresh = await fetch(request);
+        if (fresh.ok) cache.put(request, fresh.clone());
+        return fresh;
+      } catch {
+        return (await cache.match(request)) || new Response("[]", {
+          status: 200,
+          headers: {"content-type":"application/json"}
+        });
       }
     })());
     return;
