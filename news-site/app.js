@@ -11,6 +11,29 @@ const IMAGES = {
  creator: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1600&q=82"
 };
 
+
+const SUPABASE_URL = "https://aaygbxirwyqyubqdejym.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Bv2oJTbvw3Cr12LzLFt1tg_w2Ffjhlg";
+const REMOTE_NEWS_URL = `${SUPABASE_URL}/rest/v1/kanata_hinata_articles?select=id,article_date,category,title,summary,dialogue,takeaway,image_url,image_alt,image_credit,sources&order=article_date.desc,id.asc`;
+
+const REMOTE_FALLBACK_IMAGES = {
+  "世界": {
+    image: "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1600&q=82",
+    imageAlt: "世界地図と国際ニュースを想起させるテーマ画像",
+    credit: "テーマイメージ / Unsplash"
+  },
+  "国内": {
+    image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1600&q=82",
+    imageAlt: "日本の都市と国内ニュースを想起させるテーマ画像",
+    credit: "テーマイメージ / Unsplash"
+  },
+  "エンタメ": {
+    image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=82",
+    imageAlt: "映画館とカルチャーニュースを想起させるテーマ画像",
+    credit: "テーマイメージ / Unsplash"
+  }
+};
+
 const episodes = [
 {
  no:1,date:"2026.09.08",category:"中東・地政学",image:IMAGES.tanker,imageAlt:"夕景の港に停泊する大型船",credit:"テーマイメージ / Unsplash",
@@ -369,11 +392,84 @@ const sortOrder=document.getElementById("sortOrder");
 const articleSort=document.getElementById("articleSortOrder");
 const chips=document.getElementById("categoryFilters");
 const featured=document.getElementById("featured");
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function safeHttpUrl(value){
+  try{
+    const url=new URL(String(value ?? ""));
+    return (url.protocol==="https:"||url.protocol==="http:") ? url.href : "";
+  }catch{return ""}
+}
+
+function remoteRowToEpisode(row){
+  const fallback=REMOTE_FALLBACK_IMAGES[row.category] || REMOTE_FALLBACK_IMAGES["世界"];
+  const dialogue=Array.isArray(row.dialogue)
+    ? row.dialogue.map(turn=>[
+        escapeHtml(Array.isArray(turn)?turn[0]:turn?.speaker),
+        escapeHtml(Array.isArray(turn)?turn[1]:turn?.text)
+      ])
+    : [];
+  const sources=Array.isArray(row.sources)
+    ? row.sources.map(source=>({
+        title:escapeHtml(source?.title),
+        publisher:escapeHtml(source?.publisher),
+        url:safeHttpUrl(source?.url),
+        published_at:escapeHtml(source?.published_at)
+      })).filter(source=>source.url)
+    : [];
+  return {
+    no:1000000+Number(row.id),
+    displayNo:Number(row.id),
+    date:String(row.article_date).replaceAll("-","."),
+    category:escapeHtml(row.category),
+    image:safeHttpUrl(row.image_url)||fallback.image,
+    imageAlt:escapeHtml(row.image_alt)||fallback.imageAlt,
+    credit:escapeHtml(row.image_credit)||fallback.credit,
+    title:escapeHtml(row.title),
+    summary:escapeHtml(row.summary),
+    takeaway:escapeHtml(row.takeaway),
+    dialogue,
+    sources,
+    remote:true
+  };
+}
+
+async function loadRemoteEpisodes(){
+  const response=await fetch(REMOTE_NEWS_URL,{headers:{apikey:SUPABASE_PUBLISHABLE_KEY}});
+  if(!response.ok)throw new Error(`Supabase news fetch failed: ${response.status}`);
+  const rows=await response.json();
+  const order={"世界":0,"国内":1,"エンタメ":2};
+  const remote=rows.map(remoteRowToEpisode).sort((a,b)=>
+    b.date.localeCompare(a.date) || (order[a.category]??9)-(order[b.category]??9)
+  );
+  const seen=new Set(episodes.map(e=>`${e.date}\u0000${e.title}`));
+  for(const e of remote){
+    const key=`${e.date}\u0000${e.title}`;
+    if(!seen.has(key)){episodes.push(e);seen.add(key)}
+  }
+}
+
+function renderAll(){
+  categories=["すべて",...new Set(episodes.map(e=>e.category))];
+  renderFeatured();
+  renderChips();
+  renderCards();
+  renderRoute();
+}
+
 const homeView=document.getElementById("homeView");
 const articleView=document.getElementById("articleView");
 const articleContent=document.getElementById("articleContent");
 const relatedGrid=document.getElementById("relatedGrid");
-const categories=["すべて",...new Set(episodes.map(e=>e.category))];
+let categories=["すべて",...new Set(episodes.map(e=>e.category))];
 let activeCategory="すべて";
 
 function niceDate(date){const [y,m,d]=date.split(".");return `${y}年${Number(m)}月${Number(d)}日`}
@@ -408,7 +504,7 @@ function renderCards(){
     <img loading="lazy" src="${e.image}" alt="${e.imageAlt}">
     <span class="image-badge">${e.category}</span>
    </div>
-   <div class="news-card-meta"><span class="category">#${String(e.no).padStart(2,"0")}</span><time>${niceDate(e.date)}</time></div>
+   <div class="news-card-meta"><span class="category">#${String(e.displayNo??e.no).padStart(2,"0")}</span><time>${niceDate(e.date)}</time></div>
    <h2>${e.title}</h2>
    <p>${e.summary}</p>
    <div class="news-card-footer"><span class="byline"><span class="mini-avatar">対</span>奏汰 × 日向</span><span>読む →</span></div>
@@ -438,11 +534,12 @@ function renderArticle(id){
     <div class="author"><span class="author-avatar k">奏</span><div><strong>奏汰</strong><small>好奇心と鋭い問い</small></div></div>
     <div class="author"><span class="author-avatar h">日</span><div><strong>日向</strong><small>歴史・経済・地政学</small></div></div>
    </div>
-   <p class="article-intro">${e.summary} 今回は、この出来事の背景、当事者の利害、見落とされやすい構造、そして長期的に世界へ何を残すのかを二人の対話から読み解く。</p>
+   <p class="article-intro">${e.summary} 今回は、この出来事の背景、当事者の利害、見落とされやすい構造、そして長期的に何を残すのかを二人の対話から読み解く。</p>
    <section class="dialogue">
     ${e.dialogue.map(([who,text])=>`<div class="exchange ${who==="奏汰"?"kanata":"hinata"}"><div class="who">${who}</div><div class="bubble"><span class="speaker-name">${who}</span>${text}</div></div>`).join("")}
    </section>
    <div class="takeaway"><strong>KEY TAKEAWAY</strong>${e.takeaway}</div>
+   ${e.sources?.length?`<section class="article-sources"><h2>Sources</h2><ul>${e.sources.map(source=>`<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.publisher?source.publisher+"｜":""}${source.title}</a>${source.published_at?`<small>${source.published_at}</small>`:""}</li>`).join("")}</ul></section>`:""}
   </div>`;
  const related=episodes.filter(x=>x.no!==id).sort((a,b)=>Math.abs(a.no-id)-Math.abs(b.no-id)).slice(0,3);
  relatedGrid.innerHTML=related.map(x=>`<article class="related-card" data-id="${x.no}"><img loading="lazy" src="${x.image}" alt="${x.imageAlt}"><h3>${x.title}</h3></article>`).join("");
@@ -464,7 +561,10 @@ articleSort.addEventListener("change",()=>{sortOrder.value=articleSort.value;ren
 document.getElementById("backToArchive").addEventListener("click",()=>setHash("#archive"));
 document.getElementById("menuButton").addEventListener("click",()=>setHash("#archive"));
 window.addEventListener("hashchange",renderRoute);
-renderFeatured();renderChips();renderCards();renderRoute();
+renderAll();
+loadRemoteEpisodes()
+  .then(renderAll)
+  .catch(error=>console.warn("Remote news load failed; using bundled archive.",error));
 
 
 // PWA: install prompt and offline support
