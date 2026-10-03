@@ -2,13 +2,11 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
-const NEWS_INGEST_TOKEN = process.env.NEWS_INGEST_TOKEN;
 
 const required = {
   OPENAI_API_KEY,
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY,
-  NEWS_INGEST_TOKEN,
 };
 for (const [name, value] of Object.entries(required)) {
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
@@ -177,12 +175,32 @@ async function generateArticles(date) {
   return validateBundle(parseJson(text), date);
 }
 
+async function getGitHubOidcToken() {
+  const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+  const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+  if (!requestUrl || !requestToken) {
+    throw new Error("GitHub Actions OIDC environment is unavailable");
+  }
+  const url = new URL(requestUrl);
+  url.searchParams.set("audience", "kanata-hinata-news");
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${requestToken}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to obtain GitHub OIDC token: ${response.status}`);
+  }
+  const data = await response.json();
+  if (!data.value) throw new Error("GitHub OIDC token response is missing value");
+  return data.value;
+}
+
 async function publishArticles(articles) {
+  const oidcToken = await getGitHubOidcToken();
   const response = await fetch(`${SUPABASE_URL}/functions/v1/ingest-kanata-hinata`, {
     method: "POST",
     headers: {
       "apikey": SUPABASE_PUBLISHABLE_KEY,
-      "x-news-token": NEWS_INGEST_TOKEN,
+      "Authorization": `Bearer ${oidcToken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ articles }),
