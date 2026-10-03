@@ -43,6 +43,24 @@ const articleSort=document.getElementById("articleSortOrder");
 const chips=document.getElementById("categoryFilters");
 const featured=document.getElementById("featured");
 
+
+function fallbackImageFor(episode){
+  const category=String(episode?.category||"");
+  const key=category.startsWith("国内")?"国内":category.startsWith("エンタメ")?"エンタメ":"世界";
+  return REMOTE_FALLBACK_IMAGES[key].image;
+}
+
+function wireImageFallbacks(root){
+  root.querySelectorAll("img[data-fallback]").forEach(img=>{
+    img.addEventListener("error",()=>{
+      const fallback=img.dataset.fallback;
+      if(fallback && img.src!==fallback){
+        img.src=fallback;
+      }
+    },{once:true});
+  });
+}
+
 function escapeHtml(value){
   return String(value ?? "")
     .replaceAll("&","&amp;")
@@ -131,7 +149,7 @@ function renderFeatured(){
  const e=[...episodes].sort((a,b)=>b.date.localeCompare(a.date))[0];
  if(!e){featured.innerHTML=`<div class="empty">記事を読み込んでいます…</div>`;return}
  featured.innerHTML=`
-  <img class="featured-image" src="${e.image}" alt="${e.imageAlt}">
+  <img class="featured-image" src="${e.image}" alt="${e.imageAlt}" data-fallback="${fallbackImageFor(e)}">
   <div class="featured-overlay"></div>
   <div class="featured-copy">
    <div class="featured-meta"><span>特集</span><span>｜</span><span>${e.category}</span><span>${niceDate(e.date)}</span></div>
@@ -140,6 +158,7 @@ function renderFeatured(){
    <a class="featured-read" href="#article-${e.no}">最新の討論を読む →</a>
   </div>
   <span class="image-note">${e.credit}</span>`;
+ wireImageFallbacks(featured);
 }
 function renderChips(){
  chips.innerHTML=categories.map(c=>`<button class="category-chip ${c===activeCategory?"active":""}" data-category="${c}">${c}</button>`).join("");
@@ -152,7 +171,7 @@ function renderCards(){
  grid.innerHTML=rows.length?rows.map(e=>`
   <article class="news-card" data-id="${e.no}" tabindex="0" role="link" aria-label="${e.title}">
    <div class="news-card-image-wrap">
-    <img loading="lazy" src="${e.image}" alt="${e.imageAlt}">
+    <img loading="lazy" src="${e.image}" alt="${e.imageAlt}" data-fallback="${fallbackImageFor(e)}">
     <span class="image-badge">${e.category}</span>
    </div>
    <div class="news-card-meta"><span class="category">#${String(e.displayNo??e.no).padStart(2,"0")}</span><time>${niceDate(e.date)}</time></div>
@@ -160,6 +179,7 @@ function renderCards(){
    <p>${e.summary}</p>
    <div class="news-card-footer"><span class="byline"><span class="mini-avatar">対</span>奏汰 × 日向</span><span>読む →</span></div>
   </article>`).join(""):'<div class="empty">条件に一致する記事がありません。</div>';
+ wireImageFallbacks(grid);
  grid.querySelectorAll(".news-card").forEach(card=>{
    const open=()=>setHash("#article-"+card.dataset.id);
    card.addEventListener("click",open);
@@ -172,7 +192,7 @@ function renderArticle(id){
  document.title=`${e.title} | 奏汰と日向のニュース討論`;
  articleContent.innerHTML=`
   <div class="article-hero">
-   <img src="${e.image}" alt="${e.imageAlt}">
+   <img src="${e.image}" alt="${e.imageAlt}" data-fallback="${fallbackImageFor(e)}">
    <span class="image-note">${e.credit} / 記事テーマを表すイメージ</span>
   </div>
   <div class="article-body-wrap">
@@ -193,7 +213,9 @@ function renderArticle(id){
    ${e.sources?.length?`<section class="article-sources"><h2>Sources</h2><ul>${e.sources.map(source=>`<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.publisher?source.publisher+"｜":""}${source.title}</a>${source.published_at?`<small>${source.published_at}</small>`:""}</li>`).join("")}</ul></section>`:""}
   </div>`;
  const related=episodes.filter(x=>x.no!==id).sort((a,b)=>Math.abs(a.no-id)-Math.abs(b.no-id)).slice(0,3);
- relatedGrid.innerHTML=related.map(x=>`<article class="related-card" data-id="${x.no}"><img loading="lazy" src="${x.image}" alt="${x.imageAlt}"><h3>${x.title}</h3></article>`).join("");
+ relatedGrid.innerHTML=related.map(x=>`<article class="related-card" data-id="${x.no}"><img loading="lazy" src="${x.image}" alt="${x.imageAlt}" data-fallback="${fallbackImageFor(x)}"><h3>${x.title}</h3></article>`).join("");
+ wireImageFallbacks(articleContent);
+ wireImageFallbacks(relatedGrid);
  relatedGrid.querySelectorAll(".related-card").forEach(c=>c.addEventListener("click",()=>setHash("#article-"+c.dataset.id)));
  window.scrollTo({top:0,behavior:"instant"});
 }
