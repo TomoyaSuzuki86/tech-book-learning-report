@@ -1,0 +1,39 @@
+name: 奏汰と日向の朝ニュース
+
+on:
+  schedule:
+    # GitHub Actions cron is UTC. 22:30 UTC = 07:30 JST.
+    - cron: "30 22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: kanata-hinata-morning-news
+  cancel-in-progress: false
+
+jobs:
+  generate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: gpt-6-luna
+      SUPABASE_URL: https://aaygbxirwyqyubqdejym.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_Bv2oJTbvw3Cr12LzLFt1tg_w2Ffjhlg
+
+    steps:
+      - name: Checkout news generator
+        uses: actions/checkout@v4
+        with:
+          ref: kanata-hinata-news
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate and publish today's three articles
+        run: node news-cron/generate-news.mjs
