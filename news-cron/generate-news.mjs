@@ -178,16 +178,14 @@ async function generateArticles(date) {
 }
 
 async function publishArticles(articles) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/ingest_kanata_hinata_articles`, {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/ingest-kanata-hinata`, {
     method: "POST",
     headers: {
       "apikey": SUPABASE_PUBLISHABLE_KEY,
+      "x-news-token": NEWS_INGEST_TOKEN,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      p_token: NEWS_INGEST_TOKEN,
-      p_articles: articles,
-    }),
+    body: JSON.stringify({ articles }),
   });
 
   if (!response.ok) {
