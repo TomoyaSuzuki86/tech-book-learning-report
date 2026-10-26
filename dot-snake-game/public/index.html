@@ -60,7 +60,7 @@ button.secondary{background:#f1eef5;color:#514a59}
 <div class="overlay" id="startOverlay">
   <div class="card">
     <h1>Dot Snake 60</h1>
-    <p class="sub">制限時間は60秒。紫のドットを食べて長さを伸ばします。速度は最初から最後まで一定。壁は反対側へ抜け、自分の身体にぶつかると長さが1つ縮みます。</p>
+    <p class="sub">制限時間は60秒。盤面にある5つのクッキーを食べて長さを伸ばします。速度は一定。壁は反対側へ抜け、自分の身体にぶつかると長さが1つ縮みます。</p>
     <input id="nameInput" maxlength="16" autocomplete="nickname" placeholder="名前を入力">
     <div class="error" id="startError"></div>
     <button id="startBtn">60秒チャレンジ開始</button>
@@ -109,12 +109,13 @@ const resultRanks=document.getElementById("resultRanks");
 
 const START_LENGTH=5;
 const ROUND_MS=60000;
-const STEP_MS=100;
+const STEP_MS=145;
+const COOKIE_COUNT=5;
 const SWIPE_THRESHOLD=6;
 const MAX_TURN_QUEUE=2;
 
 let dpr=1,cols=11,rows=15,gap=28,ox=0,oy=0;
-let snake=[],dir={x:1,y:0},turnQueue=[],food={x:0,y:0};
+let snake=[],dir={x:1,y:0},turnQueue=[],cookies=[];
 let touchAnchor=null,lastFrame=0,moveAcc=0,roundStart=0,playing=false;
 let foods=0,collisions=0,playerName="",submitPending=false;
 
@@ -127,13 +128,7 @@ function resize(){
   canvas.style.width=w+"px";canvas.style.height=h+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  if(w<=600){
-    cols=11;
-    rows=15;
-  }else{
-    cols=13;
-    rows=17;
-  }
+  if(w<=600){cols=11;rows=15;}else{cols=13;rows=17;}
 
   const maxBoardW=Math.min(w-54,390);
   const maxBoardH=Math.min(h-180,560);
@@ -151,15 +146,19 @@ function resetBoard(){
   dir={x:1,y:0};turnQueue=[];
   foods=0;collisions=0;moveAcc=0;
   lengthHud.textContent=snake.length;
-  spawnFood();
+  cookies=[];
+  refillCookies();
 }
 
-function spawnFood(){
+function refillCookies(){
+  const occupied=(x,y)=>snake.some(s=>s.x===x&&s.y===y)||cookies.some(c=>c.x===x&&c.y===y);
   const free=[];
-  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-    if(!snake.some(s=>s.x===x&&s.y===y))free.push({x,y});
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(!occupied(x,y))free.push({x,y});
+
+  while(cookies.length<COOKIE_COUNT&&free.length){
+    const index=Math.floor(Math.random()*free.length);
+    cookies.push(free.splice(index,1)[0]);
   }
-  food=free[Math.floor(Math.random()*free.length)]||{x:0,y:0};
 }
 
 function opposite(a,b){return a.x===-b.x&&a.y===-b.y}
@@ -180,12 +179,14 @@ function move(){
   const ny=(snake[0].y+dir.y+rows)%rows;
   const head={x:nx,y:ny};
   const hitSelf=snake.some(s=>s.x===head.x&&s.y===head.y);
+  const cookieIndex=cookies.findIndex(c=>c.x===head.x&&c.y===head.y);
 
   snake.unshift(head);
 
-  if(head.x===food.x&&head.y===food.y){
+  if(cookieIndex>=0){
     foods++;
-    spawnFood();
+    cookies.splice(cookieIndex,1);
+    refillCookies();
     if(navigator.vibrate)navigator.vibrate(10);
   }else{
     snake.pop();
@@ -197,6 +198,7 @@ function move(){
     if(navigator.vibrate)navigator.vibrate(18);
   }
 
+  refillCookies();
   lengthHud.textContent=snake.length;
 }
 
@@ -204,11 +206,21 @@ function dot(x,y,r,fill){
   ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();
 }
 
+function drawCookie(x,y){
+  const cx=ox+x*gap,cy=oy+y*gap;
+  const r=gap*.25;
+  dot(cx,cy,r,"#d99a45");
+  dot(cx-r*.32,cy-r*.22,r*.12,"#70401f");
+  dot(cx+r*.28,cy-r*.30,r*.11,"#70401f");
+  dot(cx+r*.16,cy+r*.30,r*.10,"#70401f");
+  dot(cx-r*.34,cy+r*.28,r*.09,"#70401f");
+}
+
 function draw(){
   const w=innerWidth,h=innerHeight;
   ctx.clearRect(0,0,w,h);ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)dot(ox+x*gap,oy+y*gap,Math.max(1.7,gap*.065),"#e7e6eb");
-  dot(ox+food.x*gap,oy+food.y*gap,gap*.24,"#a86ff4");
+  cookies.forEach(c=>drawCookie(c.x,c.y));
   snake.forEach((s,i)=>{
     const x=ox+s.x*gap,y=oy+s.y*gap;
     dot(x,y,i===0?gap*.29:gap*.235,i===0?"#9d63ef":"#a86ff4");
