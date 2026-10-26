@@ -60,7 +60,7 @@ button.secondary{background:#f1eef5;color:#514a59}
 <div class="overlay" id="startOverlay">
   <div class="card">
     <h1>Dot Snake 60</h1>
-    <p class="sub">制限時間は60秒。紫のドットを食べて、どこまで長くできるか競います。壁は反対側へ抜け、自分にぶつかっても5000回までは続行できます。</p>
+    <p class="sub">制限時間は60秒。紫のドットを食べて、どこまで長くできるか競います。時間とともに少しずつ速くなります。壁は反対側へ抜け、自分の身体に重なってもペナルティは一切ありません。</p>
     <input id="nameInput" maxlength="16" autocomplete="nickname" placeholder="名前を入力">
     <div class="error" id="startError"></div>
     <button id="startBtn">60秒チャレンジ開始</button>
@@ -85,7 +85,7 @@ button.secondary{background:#f1eef5;color:#514a59}
       <div class="rank-title"><b>ランキング TOP 20</b><span>長さ順</span></div>
       <div class="rank-list" id="resultRanks"></div>
     </div>
-    <p class="note">同じ長さの場合は、自分への衝突回数が少ない記録を上位にします。</p>
+    <p class="note">ランキングは最終的な長さだけで決まります。身体への衝突は順位にも影響しません。</p>
   </div>
 </div>
 
@@ -107,11 +107,14 @@ const resultMessage=document.getElementById("resultMessage");
 const startRanks=document.getElementById("startRanks");
 const resultRanks=document.getElementById("resultRanks");
 
-const START_LENGTH=5, MAX_COLLISIONS=5000, ROUND_MS=60000, STEP_MS=128;
+const START_LENGTH=5;
+const ROUND_MS=60000;
+const START_STEP_MS=135;
+const END_STEP_MS=62;
 let dpr=1,cols=0,rows=0,gap=0,ox=0,oy=0;
 let snake=[],dir={x:1,y:0},queuedDir={x:1,y:0},food={x:0,y:0};
 let touchStart=null,lastFrame=0,moveAcc=0,roundStart=0,playing=false;
-let foods=0,collisions=0,playerName="",submitPending=false;
+let foods=0,playerName="",submitPending=false;
 
 nameInput.value=localStorage.getItem("dotSnakeName")||"";
 
@@ -132,7 +135,7 @@ function resetBoard(){
   snake=[];
   for(let i=0;i<START_LENGTH;i++)snake.push({x:cx-i,y:cy});
   dir={x:1,y:0};queuedDir={x:1,y:0};
-  foods=0;collisions=0;moveAcc=0;
+  foods=0;moveAcc=0;
   lengthHud.textContent=START_LENGTH;
   spawnFood();
 }
@@ -148,18 +151,18 @@ function setDir(x,y){
   if(!playing)return;
   const n={x,y};if(!opposite(n,dir))queuedDir=n;
 }
+function currentStepMs(){
+  if(!playing)return START_STEP_MS;
+  const progress=Math.min(1,Math.max(0,(performance.now()-roundStart)/ROUND_MS));
+  return START_STEP_MS+(END_STEP_MS-START_STEP_MS)*progress;
+}
 function move(){
   dir=queuedDir;
-  let nx=(snake[0].x+dir.x+cols)%cols;
-  let ny=(snake[0].y+dir.y+rows)%rows;
+  const nx=(snake[0].x+dir.x+cols)%cols;
+  const ny=(snake[0].y+dir.y+rows)%rows;
   const head={x:nx,y:ny};
 
-  if(snake.some(s=>s.x===head.x&&s.y===head.y)){
-    collisions++;
-    if(collisions>MAX_COLLISIONS){finishRound();return}
-    if(navigator.vibrate)navigator.vibrate(7);
-  }
-
+  // 自分の身体に重なっても完全にノーペナルティ。
   snake.unshift(head);
   if(head.x===food.x&&head.y===food.y){
     foods++;
@@ -194,7 +197,12 @@ function frame(t){
     const remain=Math.max(0,ROUND_MS-(performance.now()-roundStart));
     timerHud.textContent=(remain/1000).toFixed(1);
     moveAcc+=dt;
-    while(moveAcc>=STEP_MS&&playing){move();moveAcc-=STEP_MS}
+    let stepMs=currentStepMs();
+    while(moveAcc>=stepMs&&playing){
+      move();
+      moveAcc-=stepMs;
+      stepMs=currentStepMs();
+    }
     if(remain<=0&&playing)finishRound();
   }
   draw();requestAnimationFrame(frame);
@@ -245,7 +253,7 @@ async function finishRound(){
     const r=await fetch("/api/scores",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({name:playerName,score,foods,collisions})
+      body:JSON.stringify({name:playerName,score,foods})
     });
     if(!r.ok)throw new Error();
     const data=await r.json();
