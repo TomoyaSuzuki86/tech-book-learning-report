@@ -6,7 +6,7 @@ const { createClient } = require("redis");
 const app = express();
 const port = process.env.PORT || 3000;
 const redisUrl = process.env.REDIS_URL;
-const LEADERBOARD_KEY = "dot-snake:leaderboard:v2";
+const LEADERBOARD_KEY = "dot-snake:leaderboard:v3";
 
 if (!redisUrl) {
   throw new Error("REDIS_URL is required");
@@ -18,23 +18,25 @@ redis.on("error", (err) => console.error("Redis error", err));
 app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-function encodeEntry({ name, score, foods }) {
+function encodeEntry({ name, score, foods, collisions }) {
   const safeName = Buffer.from(name, "utf8").toString("base64url");
   return [
     Date.now().toString().padStart(13, "0"),
     crypto.randomBytes(4).toString("hex"),
     safeName,
     score,
-    foods
+    foods,
+    collisions
   ].join("|");
 }
 
 function decodeEntry(member) {
-  const [timestamp, id, safeName, score, foods] = member.split("|");
+  const [timestamp, id, safeName, score, foods, collisions] = member.split("|");
   return {
     player_name: Buffer.from(safeName, "base64url").toString("utf8"),
     score: Number(score),
     foods: Number(foods),
+    collisions: Number(collisions),
     created_at: new Date(Number(timestamp)).toISOString()
   };
 }
@@ -54,15 +56,22 @@ app.post("/api/scores", async (req, res) => {
     const name = String(req.body?.name ?? "").trim().slice(0, 16);
     const score = Number(req.body?.score);
     const foods = Number(req.body?.foods);
+    const collisions = Number(req.body?.collisions);
 
-    if (!name || !Number.isInteger(score) || !Number.isInteger(foods)) {
+    if (!name || !Number.isInteger(score) || !Number.isInteger(foods) || !Number.isInteger(collisions)) {
       return res.status(400).json({ error: "invalid_payload" });
     }
-    if (score !== 5 + foods || foods < 0 || foods > 2000) {
+
+    if (
+      score < 1 ||
+      foods < 0 || foods > 2000 ||
+      collisions < 0 || collisions > 2000 ||
+      score !== 5 + foods - collisions
+    ) {
       return res.status(400).json({ error: "invalid_score" });
     }
 
-    const member = encodeEntry({ name, score, foods });
+    const member = encodeEntry({ name, score, foods, collisions });
     await redis.zAdd(LEADERBOARD_KEY, [{ score, value: member }]);
 
     const rankZeroBased = await redis.zRevRank(LEADERBOARD_KEY, member);
