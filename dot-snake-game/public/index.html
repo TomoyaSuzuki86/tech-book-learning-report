@@ -17,7 +17,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
 body{touch-action:none;overscroll-behavior:none}
-#game{width:100vw;height:100dvh;display:block;background:#fff}
+#game{width:100vw;height:100dvh;display:block;background:#fff;touch-action:none}
 .hud{position:fixed;z-index:3;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
 .pill{background:rgba(255,255,255,.86);backdrop-filter:blur(10px);box-shadow:0 8px 30px rgba(50,40,70,.08);border:1px solid rgba(0,0,0,.03);border-radius:999px;padding:9px 13px;font-weight:750;font-size:14px}
 .timer{font-variant-numeric:tabular-nums;min-width:78px;text-align:center}
@@ -109,11 +109,14 @@ const resultRanks=document.getElementById("resultRanks");
 
 const START_LENGTH=5;
 const ROUND_MS=60000;
-const START_STEP_MS=135;
-const END_STEP_MS=62;
-let dpr=1,cols=0,rows=0,gap=0,ox=0,oy=0;
-let snake=[],dir={x:1,y:0},queuedDir={x:1,y:0},food={x:0,y:0};
-let touchStart=null,lastFrame=0,moveAcc=0,roundStart=0,playing=false;
+const START_STEP_MS=112;
+const END_STEP_MS=52;
+const SWIPE_THRESHOLD=6;
+const MAX_TURN_QUEUE=2;
+
+let dpr=1,cols=11,rows=15,gap=28,ox=0,oy=0;
+let snake=[],dir={x:1,y:0},turnQueue=[],food={x:0,y:0};
+let touchAnchor=null,lastFrame=0,moveAcc=0,roundStart=0,playing=false;
 let foods=0,playerName="",submitPending=false;
 
 nameInput.value=localStorage.getItem("dotSnakeName")||"";
@@ -124,21 +127,35 @@ function resize(){
   canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
   canvas.style.width=w+"px";canvas.style.height=h+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  gap=Math.max(27,Math.min(36,Math.min(w/12.5,h/18)));
-  cols=Math.max(10,Math.floor((w-gap*1.4)/gap)+1);
-  rows=Math.max(14,Math.floor((h-gap*1.8)/gap)+1);
-  ox=(w-gap*(cols-1))/2;oy=(h-gap*(rows-1))/2;
+
+  // スマホでは盤面を明確に小さくする。全画面いっぱいに広げない。
+  if(w<=600){
+    cols=11;
+    rows=15;
+  }else{
+    cols=13;
+    rows=17;
+  }
+
+  const maxBoardW=Math.min(w-54,390);
+  const maxBoardH=Math.min(h-180,560);
+  gap=Math.min(30,maxBoardW/(cols-1),maxBoardH/(rows-1));
+  gap=Math.max(22,gap);
+  ox=(w-gap*(cols-1))/2;
+  oy=(h-gap*(rows-1))/2+12;
 }
+
 function resetBoard(){
   resize();
-  const cx=Math.floor(cols*.58),cy=Math.floor(rows*.46);
+  const cx=Math.floor(cols*.56),cy=Math.floor(rows*.48);
   snake=[];
   for(let i=0;i<START_LENGTH;i++)snake.push({x:cx-i,y:cy});
-  dir={x:1,y:0};queuedDir={x:1,y:0};
+  dir={x:1,y:0};turnQueue=[];
   foods=0;moveAcc=0;
   lengthHud.textContent=START_LENGTH;
   spawnFood();
 }
+
 function spawnFood(){
   const free=[];
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
@@ -146,18 +163,28 @@ function spawnFood(){
   }
   food=free[Math.floor(Math.random()*free.length)]||{x:0,y:0};
 }
+
 function opposite(a,b){return a.x===-b.x&&a.y===-b.y}
+function sameDir(a,b){return a.x===b.x&&a.y===b.y}
+
 function setDir(x,y){
   if(!playing)return;
-  const n={x,y};if(!opposite(n,dir))queuedDir=n;
+  const next={x,y};
+  const base=turnQueue.length?turnQueue[turnQueue.length-1]:dir;
+  if(opposite(next,base)||sameDir(next,base))return;
+  if(turnQueue.length>=MAX_TURN_QUEUE)return;
+  turnQueue.push(next);
 }
+
 function currentStepMs(){
   if(!playing)return START_STEP_MS;
   const progress=Math.min(1,Math.max(0,(performance.now()-roundStart)/ROUND_MS));
-  return START_STEP_MS+(END_STEP_MS-START_STEP_MS)*progress;
+  const eased=progress*progress*(3-2*progress);
+  return START_STEP_MS+(END_STEP_MS-START_STEP_MS)*eased;
 }
+
 function move(){
-  dir=queuedDir;
+  if(turnQueue.length)dir=turnQueue.shift();
   const nx=(snake[0].x+dir.x+cols)%cols;
   const ny=(snake[0].y+dir.y+rows)%rows;
   const head={x:nx,y:ny};
@@ -168,14 +195,16 @@ function move(){
     foods++;
     lengthHud.textContent=START_LENGTH+foods;
     spawnFood();
-    if(navigator.vibrate)navigator.vibrate(14);
+    if(navigator.vibrate)navigator.vibrate(10);
   }else{
     snake.pop();
   }
 }
+
 function dot(x,y,r,fill){
   ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();
 }
+
 function draw(){
   const w=innerWidth,h=innerHeight;
   ctx.clearRect(0,0,w,h);ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
@@ -185,12 +214,14 @@ function draw(){
     const x=ox+s.x*gap,y=oy+s.y*gap;
     dot(x,y,i===0?gap*.29:gap*.235,i===0?"#9d63ef":"#a86ff4");
     if(i===0){
-      const f=gap*.055,side=gap*.085,px=-dir.y,py=dir.x,er=Math.max(1.6,gap*.038);
-      dot(x+dir.x*f+px*side,y+dir.y*f+py*side,er,"#fff");
-      dot(x+dir.x*f-px*side,y+dir.y*f-py*side,er,"#fff");
+      const shownDir=turnQueue.length?turnQueue[0]:dir;
+      const f=gap*.055,side=gap*.085,px=-shownDir.y,py=shownDir.x,er=Math.max(1.6,gap*.038);
+      dot(x+shownDir.x*f+px*side,y+shownDir.y*f+py*side,er,"#fff");
+      dot(x+shownDir.x*f-px*side,y+shownDir.y*f-py*side,er,"#fff");
     }
   });
 }
+
 function frame(t){
   const dt=Math.min(70,t-lastFrame);lastFrame=t;
   if(playing){
@@ -207,6 +238,7 @@ function frame(t){
   }
   draw();requestAnimationFrame(frame);
 }
+
 async function fetchRanks(target){
   target.innerHTML='<div class="rank-row"><div class="rank-no">…</div><div class="rank-name">読み込み中</div><div class="rank-score"></div></div>';
   try{
@@ -229,6 +261,7 @@ async function fetchRanks(target){
     target.innerHTML='<div class="rank-row"><div class="rank-no">!</div><div class="rank-name">ランキングを取得できませんでした</div><div class="rank-score"></div></div>';
   }
 }
+
 function beginRound(){
   const name=nameInput.value.trim().slice(0,16);
   if(!name){startError.textContent="名前を入力してください";return}
@@ -239,6 +272,7 @@ function beginRound(){
   timerHud.textContent="60.0";
   playing=true;submitPending=false;roundStart=performance.now();lastFrame=performance.now();
 }
+
 async function finishRound(){
   if(!playing||submitPending)return;
   playing=false;submitPending=true;
@@ -266,6 +300,7 @@ async function finishRound(){
   await fetchRanks(resultRanks);
   submitPending=false;
 }
+
 startBtn.addEventListener("click",beginRound);
 retryBtn.addEventListener("click",beginRound);
 changeNameBtn.addEventListener("click",()=>{
@@ -284,15 +319,33 @@ addEventListener("keydown",e=>{
   if(e.key==="ArrowRight")setDir(1,0);
 },{passive:false});
 
+function readSwipe(clientX,clientY){
+  if(!touchAnchor)return;
+  const dx=clientX-touchAnchor.x;
+  const dy=clientY-touchAnchor.y;
+  if(Math.hypot(dx,dy)<SWIPE_THRESHOLD)return;
+
+  if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0);
+  else setDir(0,dy>0?1:-1);
+
+  // 入力した瞬間を次のスワイプの起点にするので、指を離さず連続操作できる。
+  touchAnchor={x:clientX,y:clientY};
+}
+
 canvas.addEventListener("touchstart",e=>{
-  const t=e.changedTouches[0];touchStart={x:t.clientX,y:t.clientY};
+  const t=e.changedTouches[0];
+  touchAnchor={x:t.clientX,y:t.clientY};
 },{passive:true});
-canvas.addEventListener("touchend",e=>{
-  if(!touchStart)return;
-  const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;touchStart=null;
-  if(Math.hypot(dx,dy)<14)return;
-  if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0);else setDir(0,dy>0?1:-1);
-},{passive:true});
+
+canvas.addEventListener("touchmove",e=>{
+  if(!playing)return;
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  readSwipe(t.clientX,t.clientY);
+},{passive:false});
+
+canvas.addEventListener("touchend",()=>{touchAnchor=null},{passive:true});
+canvas.addEventListener("touchcancel",()=>{touchAnchor=null},{passive:true});
 
 addEventListener("resize",()=>{resize();draw()});
 resetBoard();fetchRanks(startRanks);requestAnimationFrame(frame);
