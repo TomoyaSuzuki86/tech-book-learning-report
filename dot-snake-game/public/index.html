@@ -60,7 +60,7 @@ button.secondary{background:#f1eef5;color:#514a59}
 <div class="overlay" id="startOverlay">
   <div class="card">
     <h1>Dot Snake 60</h1>
-    <p class="sub">制限時間は60秒。紫のドットを食べて、どこまで長くできるか競います。時間とともに少しずつ速くなります。壁は反対側へ抜け、自分の身体に重なってもペナルティは一切ありません。</p>
+    <p class="sub">制限時間は60秒。紫のドットを食べて長さを伸ばします。速度は最初から最後まで一定。壁は反対側へ抜け、自分の身体にぶつかると長さが1つ縮みます。</p>
     <input id="nameInput" maxlength="16" autocomplete="nickname" placeholder="名前を入力">
     <div class="error" id="startError"></div>
     <button id="startBtn">60秒チャレンジ開始</button>
@@ -85,7 +85,7 @@ button.secondary{background:#f1eef5;color:#514a59}
       <div class="rank-title"><b>ランキング TOP 20</b><span>長さ順</span></div>
       <div class="rank-list" id="resultRanks"></div>
     </div>
-    <p class="note">ランキングは最終的な長さだけで決まります。身体への衝突は順位にも影響しません。</p>
+    <p class="note">ランキングは60秒終了時点の長さで決まります。</p>
   </div>
 </div>
 
@@ -109,15 +109,14 @@ const resultRanks=document.getElementById("resultRanks");
 
 const START_LENGTH=5;
 const ROUND_MS=60000;
-const START_STEP_MS=112;
-const END_STEP_MS=52;
+const STEP_MS=100;
 const SWIPE_THRESHOLD=6;
 const MAX_TURN_QUEUE=2;
 
 let dpr=1,cols=11,rows=15,gap=28,ox=0,oy=0;
 let snake=[],dir={x:1,y:0},turnQueue=[],food={x:0,y:0};
 let touchAnchor=null,lastFrame=0,moveAcc=0,roundStart=0,playing=false;
-let foods=0,playerName="",submitPending=false;
+let foods=0,collisions=0,playerName="",submitPending=false;
 
 nameInput.value=localStorage.getItem("dotSnakeName")||"";
 
@@ -128,7 +127,6 @@ function resize(){
   canvas.style.width=w+"px";canvas.style.height=h+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  // スマホでは盤面を明確に小さくする。全画面いっぱいに広げない。
   if(w<=600){
     cols=11;
     rows=15;
@@ -151,8 +149,8 @@ function resetBoard(){
   snake=[];
   for(let i=0;i<START_LENGTH;i++)snake.push({x:cx-i,y:cy});
   dir={x:1,y:0};turnQueue=[];
-  foods=0;moveAcc=0;
-  lengthHud.textContent=START_LENGTH;
+  foods=0;collisions=0;moveAcc=0;
+  lengthHud.textContent=snake.length;
   spawnFood();
 }
 
@@ -176,29 +174,30 @@ function setDir(x,y){
   turnQueue.push(next);
 }
 
-function currentStepMs(){
-  if(!playing)return START_STEP_MS;
-  const progress=Math.min(1,Math.max(0,(performance.now()-roundStart)/ROUND_MS));
-  const eased=progress*progress*(3-2*progress);
-  return START_STEP_MS+(END_STEP_MS-START_STEP_MS)*eased;
-}
-
 function move(){
   if(turnQueue.length)dir=turnQueue.shift();
   const nx=(snake[0].x+dir.x+cols)%cols;
   const ny=(snake[0].y+dir.y+rows)%rows;
   const head={x:nx,y:ny};
+  const hitSelf=snake.some(s=>s.x===head.x&&s.y===head.y);
 
-  // 自分の身体に重なっても完全にノーペナルティ。
   snake.unshift(head);
+
   if(head.x===food.x&&head.y===food.y){
     foods++;
-    lengthHud.textContent=START_LENGTH+foods;
     spawnFood();
     if(navigator.vibrate)navigator.vibrate(10);
   }else{
     snake.pop();
   }
+
+  if(hitSelf&&snake.length>1){
+    snake.pop();
+    collisions++;
+    if(navigator.vibrate)navigator.vibrate(18);
+  }
+
+  lengthHud.textContent=snake.length;
 }
 
 function dot(x,y,r,fill){
@@ -228,11 +227,9 @@ function frame(t){
     const remain=Math.max(0,ROUND_MS-(performance.now()-roundStart));
     timerHud.textContent=(remain/1000).toFixed(1);
     moveAcc+=dt;
-    let stepMs=currentStepMs();
-    while(moveAcc>=stepMs&&playing){
+    while(moveAcc>=STEP_MS&&playing){
       move();
-      moveAcc-=stepMs;
-      stepMs=currentStepMs();
+      moveAcc-=STEP_MS;
     }
     if(remain<=0&&playing)finishRound();
   }
@@ -277,7 +274,7 @@ async function finishRound(){
   if(!playing||submitPending)return;
   playing=false;submitPending=true;
   timerHud.textContent="0.0";
-  const score=START_LENGTH+foods;
+  const score=snake.length;
   resultLength.textContent=score;
   resultRank.textContent="…";
   resultMessage.textContent="ランキングへ記録しています。";
@@ -287,7 +284,7 @@ async function finishRound(){
     const r=await fetch("/api/scores",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({name:playerName,score,foods})
+      body:JSON.stringify({name:playerName,score,foods,collisions})
     });
     if(!r.ok)throw new Error();
     const data=await r.json();
@@ -328,7 +325,6 @@ function readSwipe(clientX,clientY){
   if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0);
   else setDir(0,dy>0?1:-1);
 
-  // 入力した瞬間を次のスワイプの起点にするので、指を離さず連続操作できる。
   touchAnchor={x:clientX,y:clientY};
 }
 
