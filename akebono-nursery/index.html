@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f6f1">
+  <meta name="description" content="あけぼの保育園の見学メモ。良かったところ、気になったところ、緑の保育園との比較を整理。">
+  <title>あけぼの保育園｜見学ノート</title>
+  <style>
+    :root { color-scheme:light; --bg:#f6f6f1; --paper:#fff; --ink:#22352e; --muted:#66766e; --green:#2e604c; --pale:#e7eee6; --line:#e2e7df; --warn:#8c5340; --warnbg:#f8efea; --r:18px; }
+    * { box-sizing:border-box; } html { scroll-behavior:smooth; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif; background:var(--bg); color:var(--ink); font-size:16px; line-height:1.8; letter-spacing:.01em; }
+    a { color:inherit; } button { font:inherit; }
+    .wrap { width:min(100% - 40px,1040px); margin:auto; }
+    .top { padding:28px 0 22px; border-bottom:1px solid var(--line); }
+    .top .wrap { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.13em; font-weight:800; }
+    .brand-mark { width:34px; height:34px; border:1px solid #adc5b4; border-radius:12px; display:grid; place-items:center; color:var(--green); }
+    .date { font-size:12px; color:var(--muted); letter-spacing:.04em; }
+    .hero { padding:76px 0 67px; display:grid; grid-template-columns:1.35fr .65fr; gap:40px; align-items:end; }
+    .eyebrow { color:var(--green); font-size:12px; letter-spacing:.18em; font-weight:800; margin:0 0 15px; text-transform:uppercase; }
+    h1 { font-family:Georgia,"Yu Mincho","Hiragino Mincho ProN",serif; font-size:clamp(35px,5.8vw,69px); letter-spacing:.035em; line-height:1.32; font-weight:600; margin:0 0 25px; }
+    .intro { max-width:650px; margin:0; color:#4e6257; font-size:clamp(16px,1.7vw,19px); line-height:1.95; }
+    .hero-note { border-left:2px solid #a4c1aa; padding:5px 0 5px 22px; font-size:14px; color:var(--muted); line-height:1.85; }
+    .hero-note strong { display:block; color:var(--ink); font-weight:700; font-size:15px; margin:4px 0 6px; }
+    .nav { border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .nav .wrap { display:flex; align-items:center; flex-wrap:wrap; column-gap:34px; row-gap:0; }
+    .nav a { display:inline-flex; align-items:center; min-height:50px; font-size:13px; font-weight:700; text-decoration:none; color:#50685a; }
+    .nav a:hover,.nav a:focus-visible { color:#153f2c; text-decoration:underline; text-underline-offset:5px; }
+    section { scroll-margin-top:28px; padding-top:74px; }
+    .section-title { display:flex; flex-wrap:wrap; align-items:baseline; gap:16px; margin-bottom:27px; }
+    .index { color:#7d9a86; font:600 14px Georgia,serif; }
+    h2 { font-size:clamp(24px,3vw,32px); line-height:1.4; letter-spacing:.02em; margin:0; }
+    .two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .panel { background:var(--paper); border:1px solid var(--line); border-radius:var(--r); padding:30px; }
+    .panel--good { background:#e9f0e8; border-color:#dbe7da; }
+    .panel--care { background:var(--warnbg); border-color:#f0e0d7; }
+    .tiny { font-size:12px; font-weight:800; letter-spacing:.12em; color:var(--green); margin:0 0 10px; }
+    .panel--care .tiny { color:var(--warn); }
+    .panel h3 { margin:0 0 12px; font-size:21px; line-height:1.5; }
+    .panel p:last-child { margin:0; }
+    .panel p { margin:0; color:#53645a; font-size:15px; }
+    .panel--care p { color:#765f55; }
+    .feature { display:grid; grid-template-columns:150px 1fr; gap:24px; padding:22px 0; border-bottom:1px solid var(--line); }
+    .feature:first-of-type { border-top:1px solid var(--line); }
+    .feature b { font-size:14px; }
+    .feature p { margin:0; font-size:15px; color:#51645a; }
+    .emphasis { color:var(--warn); font-weight:700; }
+    .table-box { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--paper); }
+    table { border-collapse:collapse; width:100%; min-width:560px; text-align:left; }
+    th,td { padding:20px 24px; border-bottom:1px solid var(--line); vertical-align:top; font-size:14px; line-height:1.7; }
+    tr:last-child td { border-bottom:0; } th { background:#edf2eb; font-size:13px; font-weight:750; }
+    th:first-child { width:23%; } td:first-child { font-weight:700; }
+    .neutral { color:var(--muted); }
+    .footnote { font-size:13px; color:var(--muted); margin:14px 0 0; }
+    .conclusion { border-top:2px solid var(--green); padding:32px 0 0; display:grid; grid-template-columns:1fr 2fr; gap:30px; }
+    .conclusion strong { color:var(--green); font-size:13px; }
+    .conclusion p { margin:0; font-size:17px; line-height:2; }
+    .conclusion p + p { margin-top:15px; font-size:14px; color:var(--muted); }
+    footer { padding:80px 0 35px; color:#819086; font-size:12px; }
+    :focus-visible { outline:3px solid #547e62; outline-offset:4px; }
+    @media (max-width:700px) { .wrap { width:min(100% - 36px,1040px); } .hero { grid-template-columns:1fr; gap:24px; padding:48px 0; } .hero-note { margin-top:1px; } section { padding-top:55px; } .two { grid-template-columns:1fr; } .panel { padding:25px; } .feature { grid-template-columns:1fr; gap:3px; padding:18px 0; } .conclusion { grid-template-columns:1fr; gap:12px; } .nav .wrap { column-gap:21px; } .top { padding:19px 0; } }
+    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap"><div class="brand"><span class="brand-mark" aria-hidden="true">✳</span> NURSERY VISIT NOTES</div><div class="date">2026.11.07</div></div></header>
+  <main>
+    <div class="wrap hero">
+      <div><p class="eyebrow">保育園見学ノート / 01</p><h1>あけぼの保育園</h1><p class="intro">きれいで、清潔感のある園。幼稚園のようなきちんとした雰囲気が魅力的。一方で、毎日の準備と体調不良時の対応には気になる点もありました。</p></div>
+      <aside class="hero-note"><span>見学を終えて</span><strong>環境面は好印象。<br>安心して預けられるかは、もう少し比較したい。</strong>自分たちの見学時点の記録です。</aside>
+    </div>
+    <nav class="nav" aria-label="ページ内の移動"><div class="wrap"><a href="#good">よかったところ</a><a href="#concerns">気になったところ</a><a href="#details">園のしくみ</a><a href="#compare">他園との比較</a></div></nav>
+    <div class="wrap">
+      <section id="good" aria-labelledby="good-title"><div class="section-title"><span class="index">01</span><h2 id="good-title">よかったところ</h2></div>
+        <div class="two">
+          <article class="panel panel--good"><p class="tiny">ENVIRONMENT</p><h3>綺麗で、清潔感がある</h3><p>園内は整っていて、気持ちよく過ごせそうな印象。見学で特に好感を持ったポイント。</p></article>
+          <article class="panel"><p class="tiny">COMMUNICATION</p><h3>連絡帳はアプリで完結</h3><p>日々のやり取りをアプリでできるのは便利。紙の連絡帳を管理する負担が少ない。</p></article>
+        </div>
+      </section>
+      <section id="concerns" aria-labelledby="concerns-title"><div class="section-title"><span class="index">02</span><h2 id="concerns-title">気になったところ</h2></div>
+        <div class="two">
+          <article class="panel panel--care"><p class="tiny">MOST IMPORTANT</p><h3>体調不良時の対応に不安</h3><p>見学時の説明では、体調を崩しても看護師による対応はなく、保護者のお迎えまでは部屋の隅で待機するとのこと。緑の保育園との大きな違いに感じました。</p></article>
+          <article class="panel panel--care"><p class="tiny">PICK-UP POLICY</p><h3>37.5℃以上で必ずお迎え</h3><p>説明では、37.5℃以上になると必ず呼び出し。緑の保育園と比べて融通が利きにくい印象です。双子を預けることを考えると、日々の影響が気になります。</p></article>
+          <article class="panel"><p class="tiny">DAILY PREPARATION</p><h3>おむつは毎回、記名して持参</h3><p>おむつのレンタルサービスはなし。2人分を用意する手間は積み重なりそう。使用後の廃棄は月額料金を支払えば園にお願いできます。</p></article>
+          <article class="panel"><p class="tiny">STYLE</p><h3>指定品がありそう</h3><p>制服や指定の鞄があるようで、幼稚園に近い雰囲気。実際に必要な品目や費用は、入園前に確認したいところです。</p></article>
+        </div>
+      </section>
+      <section id="details" aria-labelledby="details-title"><div class="section-title"><span class="index">03</span><h2 id="details-title">園のしくみ</h2></div>
+        <div class="feature"><b>登園・受け渡し</b><p>0歳児の部屋は3階。ただし保護者が3階まで行く必要はなく、入口で預けると先生が連れて行ってくれます。</p></div>
+        <div class="feature"><b>行事</b><p>行事の数は一般的な保育園と同程度の印象。</p></div>
+        <div class="feature"><b>連絡帳</b><p>アプリでやり取りが可能。</p></div>
+        <div class="feature"><b>おむつ</b><p>レンタルはなく、記名して持参。廃棄は月額有料のサービスあり。</p></div>
+        <div class="feature"><b>園の雰囲気</b><p>制服や指定鞄があるようで、幼稚園らしい雰囲気。</p></div>
+      </section>
+      <section id="compare" aria-labelledby="compare-title"><div class="section-title"><span class="index">04</span><h2 id="compare-title">緑の保育園との比較</h2></div>
+        <div class="table-box"><table><thead><tr><th>比較ポイント</th><th>あけぼの保育園</th><th>緑の保育園</th></tr></thead><tbody>
+          <tr><td>看護師による対応</td><td><span class="emphasis">体調不良時の対応なし</span></td><td>看護師対応があるとの見学時の認識</td></tr>
+          <tr><td>発熱時</td><td>37.5℃以上で必ず呼び出し</td><td>比較的柔軟という見学時の印象</td></tr>
+          <tr><td>園内環境</td><td>綺麗で清潔感あり</td><td class="neutral">このメモでは未評価</td></tr>
+          <tr><td>おむつ</td><td>記名して毎回持参</td><td class="neutral">このメモでは未確認</td></tr>
+          <tr><td>連絡帳</td><td>アプリ対応</td><td class="neutral">このメモでは未確認</td></tr>
+        </tbody></table></div><p class="footnote">※ 見学時の説明と個人の印象を整理したメモです。園の正式な最新方針やサービス内容を保証するものではありません。</p>
+      </section>
+      <section aria-labelledby="summary-title"><div class="section-title"><span class="index">05</span><h2 id="summary-title">いまの結論</h2></div>
+        <div class="conclusion"><strong>OUR TAKEAWAY</strong><div><p>施設の綺麗さは魅力。ただ、双子を毎日預けることを考えると、<b>体調不良時の安心感と対応の柔軟さ</b>を、見た目のよさ以上に重視したい。</p><p>現時点では緑の保育園がやや有力。ただし、先生たちの接し方や日常の保育、費用など、未比較の項目を確認してから決めたい。</p></div></div>
+      </section>
+    </div>
+  </main>
+  <footer><div class="wrap">PERSONAL NURSERY VISIT NOTES <span aria-hidden="true">·</span> 2026.11.07</div></footer>
+</body>
+</html>
