@@ -19,3 +19,7 @@
 /* Live mirror canvases are rendered BEHIND the overlays; keep them transparent. */
 .mirror{background:transparent}
 body.cockpit .hud-center{display:none}
+/* Keep mission title legible against bright sky in every camera. */
+.mission{padding:8px 12px;border-radius:13px;background:rgba(10,24,30,.70);border:1px solid rgba(242,251,249,.17);backdrop-filter:blur(9px)}
+@media(orientation:landscape) and (max-height:510px){.stats{top:calc(env(safe-area-inset-top,0px) + 101px)}}
+@media(orientation:landscape) and (max-height:410px){.stats{top:calc(env(safe-area-inset-top,0px) + 95px)}}
