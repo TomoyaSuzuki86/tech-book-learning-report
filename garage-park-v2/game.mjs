@@ -123,7 +123,7 @@ function updateCamera(dt){
  }else if(state.view==='cockpit'){
   camDesired.copy(worldPoint(-.36,1.42,.20,h));camGoal.copy(worldPoint(-.36,1.30,12,h));cam.up.set(0,1,0);cam.fov=75;
  }else{
-  camDesired.copy(worldPoint(5.0,5.5,-10,h));camGoal.copy(worldPoint(0,1.1,2.4,h));cam.up.set(0,1,0);cam.fov=52;
+  camDesired.copy(worldPoint(0,5.5,-10,h));camGoal.copy(worldPoint(0,1.1,2.4,h));cam.up.set(0,1,0);cam.fov=52;
  }
  if(!frameTime||state.view==='cockpit')cam.position.copy(camDesired);else cam.position.lerp(camDesired,Math.min(1,dt*6));
  cam.lookAt(camGoal);cam.updateProjectionMatrix();
