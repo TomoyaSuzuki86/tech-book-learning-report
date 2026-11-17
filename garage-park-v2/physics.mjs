@@ -1,4 +1,5 @@
-// World convention: +Z is forward, +X is right, yaw increases when turning right.
+// Vehicle front is +Z. In Three.js (+Y up), driver's right points toward -X.
+// A right turn therefore requires negative Y rotation.
 // The vehicle pose tracks its midpoint rather than treating the rear axle as a pivot.
 export const CAR = Object.freeze({width:2.02,length:4.55,wheelbase:2.72,rearAxle:-1.25,maxForward:3.8,maxReverse:2.2,accel:2.5,reverseAccel:1.9,brake:5.5,drag:1.1,maxSteer:0.6,steerSpeed:3.7});
 export const fresh = (x,z,heading=0)=>({x,z,heading,speed:0,steer:0,odometer:0});
@@ -6,7 +7,7 @@ const approach=(a,b,n)=>a<b?Math.min(a+n,b):Math.max(a-n,b);
 export function integrate(car,keys,seconds){
   const dt=Math.max(0,Math.min(.05,seconds)), s={...car};
   if(!dt)return s;
-  const demand=(Number(!!keys.right)-Number(!!keys.left));
+  const demand=(Number(!!keys.left)-Number(!!keys.right));
   s.steer=approach(s.steer,demand,CAR.steerSpeed*dt);
   const throttle=Number(!!keys.forward)-Number(!!keys.reverse);
   if(keys.brake||(keys.forward&&keys.reverse))s.speed=approach(s.speed,0,CAR.brake*dt);
