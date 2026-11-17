@@ -298,3 +298,32 @@ async function load(){
     const object=gltf.scene;
     if(!object?.children?.length)throw new Error('車体メッシュが含まれていません');
     let triangles=0;
+    object.traverse(o=>{
+      if(!o.isMesh)return;
+      const g=o.geometry;
+      triangles+=(g.index?g.index.count:g.attributes.position.count)/3;
+      o.castShadow=true;o.receiveShadow=false;
+      // Preserve glTF PBR material, baseColor, normal and metallic-roughness maps.
+      if(o.material){const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){m.envMapIntensity=.8;m.needsUpdate=true}}
+    });
+    if(!triangles)throw new Error('描画できる三角形がありません');
+    const bounds=new THREE.Box3().setFromObject(object);
+    if(bounds.isEmpty())throw new Error('車体サイズが取得できません');
+    const size=bounds.getSize(new THREE.Vector3());
+    if(size.z<.5||size.y<.05)throw new Error('モデルの形状が想定外です');
+    const center=bounds.getCenter(new THREE.Vector3());
+    const scale=4.55/size.z;
+    object.scale.setScalar(scale);
+    object.position.set(-center.x*scale,-bounds.min.y*scale+.025,-center.z*scale);
+    root.add(object);
+    ready=true;
+    el('loader').classList.add('hidden');
+    el('status').textContent=`モデル読み込み完了 ・ ${Math.round(triangles).toLocaleString()}面`; 
+    setMessage('前進を長押しして走行。左右ボタンでハンドルを操作。');
+    console.info(`Garage Park: model loaded, ${Math.round(triangles)} triangles, scaled to 4.55m.`);
+  }catch(error){
+    console.error('Garage Park: failed to load model',error);
+    fail('車の3Dデータを読み込めませんでした',String(error?.message||error));
+  }
+}
+load();
