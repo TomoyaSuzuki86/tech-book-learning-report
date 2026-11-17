@@ -319,7 +319,15 @@ requestAnimationFrame(loop);
 async function init(){
  try{
   // GLB shape, material maps, normals are preserved from the uploaded asset.
-  const gltf=await new GLTFLoader().loadAsync('./car.glb');
+  // A newly published CDN edge can briefly return 404 for the GLB even after
+  // the HTML is live. Retry ONCE for a network/404 error only.
+  let gltf;
+  try { gltf=await new GLTFLoader().loadAsync('./car.glb'); }
+  catch (error) {
+    if (!/404|failed to fetch|network/i.test(String(error))) throw error;
+    await new Promise(resolve=>setTimeout(resolve,1000));
+    gltf=await new GLTFLoader().loadAsync('./car.glb?edge=1');
+  }
   vehicleModel=gltf.scene;
   let triangles=0;vehicleModel.traverse(node=>{
    if(!node.isMesh)return;triangles+=(node.geometry.index?node.geometry.index.count:node.geometry.attributes.position.count)/3;
