@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b151b" />
+  <title>GARAGE AR | 愛車を呼び出す</title>
+  <meta name="description" content="好きな場所に愛車をARで召喚。鑑賞して、少し運転。" />
+  <link rel="stylesheet" href="./style.css" />
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/"}}</script>
+</head>
+<body>
+  <canvas id="scene" aria-label="愛車の3D表示"></canvas>
+  <main id="intro" class="intro" aria-label="GARAGE AR">
+    <div class="intro-heading"><span class="eyebrow">YOUR CAR. YOUR SPACE.</span><h1>GARAGE <span>AR</span></h1><p>好きな場所に、愛車を呼び出す。</p></div>
+    <div class="intro-actions">
+      <div id="loading-status" class="intro-status">車体を読み込んでいます…</div>
+      <button id="start-ar" class="primary" disabled><span class="button-icon" aria-hidden="true">◎</span> ARを開始</button>
+      <button id="start-preview" class="secondary" disabled>3Dで試す</button>
+      <p id="availability" class="availability" role="status">Android Chrome + AR対応端末で利用できます</p>
+    </div>
+  </main>
+  <!-- WebXR DOM Overlay is the same minimal HUD used in 3D preview. -->
+  <div id="overlay" class="overlay" aria-label="AR操作パネル">
+    <header class="topbar"><div class="logo">GARAGE <span>AR</span></div><div class="header-buttons">
+      <button id="summon-again" class="quiet" hidden>再召喚</button>
+      <button id="mode-toggle" class="mode-toggle" hidden>運転する</button>
+      <button id="exit-preview" class="close" aria-label="終了" title="終了"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg></button>
+    </div></header>
+    <div class="center-hint" id="hint" role="status" aria-live="polite">床や机をゆっくり映してください</div>
+    <div class="place-row" id="place-row" hidden><button id="place-button" class="primary place-button" disabled>ここに呼び出す</button></div>
+    <div class="drive-pad" id="drive-pad" hidden>
+      <div class="steering" role="group" aria-label="ハンドル">
+        <button class="drive-button" data-drive="left" aria-label="左へ曲がる"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7M8 12h13"/></svg><span>左</span></button>
+        <button class="drive-button" data-drive="right" aria-label="右へ曲がる"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7M16 12H3"/></svg><span>右</span></button>
+      </div>
+      <div class="pedals" role="group" aria-label="前進とバック">
+        <button class="drive-button" data-drive="reverse" aria-label="バック"><svg viewBox="0 0 24 24"><path d="M12 4v16m0 0-6-6m6 6 6-6"/></svg><span>バック</span></button>
+        <button class="drive-button accelerator" data-drive="forward" aria-label="前進"><svg viewBox="0 0 24 24"><path d="M12 20V4m0 0-6 6m6-6 6 6"/></svg><span>前進</span></button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
